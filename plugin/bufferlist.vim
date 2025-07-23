@@ -598,7 +598,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             let s:bufferlist_winidn = win_getid()
             " set option
             setlocal buftype=nofile bufhidden=hide noswapfile nobuflisted nomodifiable
-            setlocal nonumber norelativenumber nocursorline nocursorcolumn nowrap nospell
+            setlocal nonumber norelativenumber nowrap nocursorline nocursorcolumn nospell
             setlocal nofoldenable foldcolumn=0 signcolumn=no
             " set keymap
             nnoremap <buffer> <silent> l             :call bufferlist#BufActive(1)<CR>
