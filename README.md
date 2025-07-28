@@ -32,7 +32,9 @@ Add these to your `.vimrc`:
 ```vim
 " Set 1 enable bufferlist (default: 0)
 let g:bufferlist_enabled = 1
-" Position: 'top', 'bottom', 'left', 'right' (default: 'top')
+" Set 1 autostart bufferlist (default: 0)
+let g:bufferlist_autostart = 1
+" Position of bufferlist: 'top', 'bottom', 'left', 'right' (default: 'top')
 let g:bufferlist_position = 'top'
 " Window width for vertical position (default: 20)
 let g:bufferlist_winwidth = 20
@@ -48,19 +50,19 @@ Color Customization
 ```vim
 " Tab color format - [dark cterm, dark gui, light cterm, light gui]
 " Normal buffers
-let g:bufferlist_defnor = ['White',      '#FFFFFF', 'Black',      '#000000']
+let g:bufferlist_hldefnor = '#FFFFFF'
 " Modified buffers
-let g:bufferlist_defmod = ['LightRed',   '#F56C6C', 'LightRed',   '#D5393E']
+let g:bufferlist_hldefmod = '#F56C6C'
 " Current normal buffer
-let g:bufferlist_curnor = ['LightGreen', '#67C23A', 'LightGreen', '#18794E']
+let g:bufferlist_hlcurnor = '#67C23A'
 " Current modified buffer
-let g:bufferlist_curmod = ['LightRed',   '#E0575B', 'LightRed',   '#B8272C']
+let g:bufferlist_hlcurmod = '#E0575B'
 " Visible normal buffer
-let g:bufferlist_visnor = ['LightGreen', '#67C23A', 'LightGreen', '#18794E']
+let g:bufferlist_hlvisnor = '#67C23A'
 " Visible modified buffer
-let g:bufferlist_vismod = ['LightRed',   '#E0575B', 'LightRed',   '#B8272C']
+let g:bufferlist_hlvismod = '#E0575B'
 " Separator
-let g:bufferlist_sepnor = ['White',      '#AAAAAA', 'Black',      '#555555']
+let g:bufferlist_hlsepnor = '#AAAAAA'
 ```
 
 ## Usage

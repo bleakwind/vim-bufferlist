@@ -25,82 +25,49 @@ set cpoptions&vim
 " ============================================================================
 " bufferlist setting
 " ============================================================================
-" public setting
-let g:bufferlist_enabled        = get(g:, 'bufferlist_enabled',     0)
-let g:bufferlist_position       = get(g:, 'bufferlist_position',    'top')
-let g:bufferlist_winwidth       = get(g:, 'bufferlist_winwidth',    20)
-let g:bufferlist_winheight      = get(g:, 'bufferlist_winheight',   1)
-let g:bufferlist_horzsepar      = get(g:, 'bufferlist_horzsepar',   '|')
-let g:bufferlist_modifmark      = get(g:, 'bufferlist_modifmark',   '[+]')
+" public setting - [g:bufferlist_position:top|bottom|left|right]
+let g:bufferlist_enabled    = get(g:, 'bufferlist_enabled',     0)
+let g:bufferlist_autostart  = get(g:, 'bufferlist_autostart',   0)
+let g:bufferlist_position   = get(g:, 'bufferlist_position',    'top')
+let g:bufferlist_winwidth   = get(g:, 'bufferlist_winwidth',    20)
+let g:bufferlist_winheight  = get(g:, 'bufferlist_winheight',   1)
+let g:bufferlist_horzsepar  = get(g:, 'bufferlist_horzsepar',   '|')
+let g:bufferlist_modifmark  = get(g:, 'bufferlist_modifmark',   '[+]')
 
-" tab color format - [dark cterm, dark gui, light cterm, light gui]
-let g:bufferlist_defnor         = get(g:, 'bufferlist_defnor',      ['White',      '#FFFFFF', 'Black',      '#000000'])
-let g:bufferlist_defmod         = get(g:, 'bufferlist_defmod',      ['LightRed',   '#F56C6C', 'LightRed',   '#D5393E'])
-let g:bufferlist_curnor         = get(g:, 'bufferlist_curnor',      ['LightGreen', '#67C23A', 'LightGreen', '#18794E'])
-let g:bufferlist_curmod         = get(g:, 'bufferlist_curmod',      ['LightRed',   '#E0575B', 'LightRed',   '#B8272C'])
-let g:bufferlist_visnor         = get(g:, 'bufferlist_visnor',      ['LightGreen', '#67C23A', 'LightGreen', '#18794E'])
-let g:bufferlist_vismod         = get(g:, 'bufferlist_vismod',      ['LightRed',   '#E0575B', 'LightRed',   '#B8272C'])
-let g:bufferlist_sepnor         = get(g:, 'bufferlist_sepnor',      ['White',      '#AAAAAA', 'Black',      '#555555'])
+" tab color
+let g:bufferlist_hldefnor   = get(g:, 'bufferlist_hldefnor',    '#FFFFFF')
+let g:bufferlist_hldefmod   = get(g:, 'bufferlist_hldefmod',    '#F56C6C')
+let g:bufferlist_hlcurnor   = get(g:, 'bufferlist_hlcurnor',    '#67C23A')
+let g:bufferlist_hlcurmod   = get(g:, 'bufferlist_hlcurmod',    '#E0575B')
+let g:bufferlist_hlvisnor   = get(g:, 'bufferlist_hlvisnor',    '#67C23A')
+let g:bufferlist_hlvismod   = get(g:, 'bufferlist_hlvismod',    '#E0575B')
+let g:bufferlist_hlsepnor   = get(g:, 'bufferlist_hlsepnor',    '#AAAAAA')
 
 " reopen file
-let g:bufferlist_reopen         = get(g:, 'bufferlist_reopen',      0)
-let g:bufferlist_filepath       = get(g:, 'bufferlist_filepath',    $HOME.'/.vim/bufferlist')
+let g:bufferlist_reopen     = get(g:, 'bufferlist_reopen',      0)
+let g:bufferlist_filepath   = get(g:, 'bufferlist_filepath',    $HOME.'/.vim/bufferlist')
 
 " plugin variable
-let s:bufferlist_bufnbr         = -1
-let s:bufferlist_winidn         = -1
-let s:bufferlist_tabidx         = 0
-let s:bufferlist_ifhorz         = 0
-let s:bufferlist_untnum         = 0
-let s:bufferlist_bufinf         = []
-let s:bufferlist_hltdef         = []
-let s:bufferlist_hltcur         = []
-let s:bufferlist_hltvis         = []
-let s:bufferlist_timertab       = -1
-let s:bufferlist_timerbuf       = -1
-let s:bufferlist_restover       = 0
-let s:bufferlist_filelist       = g:bufferlist_filepath.'/filelist'
-let s:bufferlist_filedata       = {}
+let s:bufferlist_bufnbr     = -1
+let s:bufferlist_winidn     = -1
+let s:bufferlist_tabidx     = 0
+let s:bufferlist_ifhorz     = 0
+let s:bufferlist_untnum     = 0
+let s:bufferlist_bufinf     = []
+let s:bufferlist_hltdef     = []
+let s:bufferlist_hltcur     = []
+let s:bufferlist_hltvis     = []
+let s:bufferlist_timertab   = -1
+let s:bufferlist_timerbuf   = -1
+let s:bufferlist_restover   = 0
+let s:bufferlist_filelist   = g:bufferlist_filepath.'/filelist'
+let s:bufferlist_filedata   = {}
 
 " ============================================================================
 " bufferlist detail
 " g:bufferlist_enabled = 1
 " ============================================================================
 if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
-
-    " --------------------------------------------------
-    " bufferlist#MixWhite
-    " --------------------------------------------------
-    function! bufferlist#MixWhite(color, alpha) abort
-        let l:res_color = a:color
-        if a:color =~? '^#[0-9a-fA-F]\{6}$' && a:alpha >= 0.0 && a:alpha <= 1.0
-            let l:r = str2nr(a:color[1:2], 16)
-            let l:g = str2nr(a:color[3:4], 16)
-            let l:b = str2nr(a:color[5:6], 16)
-
-            let l:mixed_r = float2nr(l:r * (1.0 - a:alpha) + 255 * a:alpha)
-            let l:mixed_g = float2nr(l:g * (1.0 - a:alpha) + 255 * a:alpha)
-            let l:mixed_b = float2nr(l:b * (1.0 - a:alpha) + 255 * a:alpha)
-
-            let l:mixed_r = max([0, min([255, l:mixed_r])])
-            let l:mixed_g = max([0, min([255, l:mixed_g])])
-            let l:mixed_b = max([0, min([255, l:mixed_b])])
-
-            let l:res_color = printf('#%02X%02X%02X', l:mixed_r, l:mixed_g, l:mixed_b)
-        endif
-        return l:res_color
-    endfunction
-
-    " --------------------------------------------------
-    " bufferlist#CalcFg
-    " --------------------------------------------------
-    function! bufferlist#CalcFg(hex) abort
-        let l:r = str2nr(a:hex[1:2], 16)
-        let l:g = str2nr(a:hex[3:4], 16)
-        let l:b = str2nr(a:hex[5:6], 16)
-        let l:brightness = (0.299 * l:r + 0.587 * l:g + 0.114 * l:b) / 255
-        return l:brightness > 0.5 ? 'Black' : 'White'
-    endfunction
 
     " --------------------------------------------------
     " bufferlist#IsSpecial
@@ -182,7 +149,6 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#TabRender
     " --------------------------------------------------
     function! bufferlist#TabRender(...) abort
-        " render highlight
         if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0
 
             " build tablist
@@ -215,27 +181,27 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     if il > 0
                         let l:sep_pos = l:pos - strlen(g:bufferlist_horzsepar)
                         if il == s:bufferlist_tabidx || il - 1 == s:bufferlist_tabidx || l:bufinf.active || s:bufferlist_bufinf[il-1].active
-                            let l:sep_match = matchaddpos('BufferlistSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
+                            let l:sep_match = matchaddpos('BufferlistHlSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         else
-                            let l:sep_match = matchaddpos('BufferlistSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
+                            let l:sep_match = matchaddpos('BufferlistHlSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         endif
                         call add(s:bufferlist_hltdef, l:sep_match)
                     endif
                     " hl tabdat
                     if il == s:bufferlist_tabidx
                         " cur
-                        let l:hl_group = l:modify ? 'BufferlistCurmod' : 'BufferlistCurnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlCurmod' : 'BufferlistHlCurnor'
                         let l:match_id = matchaddpos(l:hl_group, [[1, l:pos, l:bufinf.length]], 10)
                         call add(s:bufferlist_hltcur, l:match_id)
                         call cursor(1, l:pos)
                     elseif l:bufinf.active
                         " vis
-                        let l:hl_group = l:modify ? 'BufferlistVismod' : 'BufferlistVisnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlVismod' : 'BufferlistHlVisnor'
                         let l:match_id = matchaddpos(l:hl_group, [[1, l:pos, l:bufinf.length]], 5)
                         call add(s:bufferlist_hltvis, l:match_id)
                     else
                         " def
-                        let l:hl_group = l:modify ? 'BufferlistDefmod' : 'BufferlistDefnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlDefmod' : 'BufferlistHlDefnor'
                         let l:match_id = matchaddpos(l:hl_group, [[1, l:pos, l:bufinf.length]], 1)
                         call add(s:bufferlist_hltdef, l:match_id)
                     endif
@@ -243,9 +209,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     if il < len(s:bufferlist_bufinf) - 1
                         let l:sep_pos = l:pos + l:bufinf.length
                         if il == s:bufferlist_tabidx || l:bufinf.active
-                            let l:sep_match = matchaddpos('BufferlistSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
+                            let l:sep_match = matchaddpos('BufferlistHlSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         else
-                            let l:sep_match = matchaddpos('BufferlistSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
+                            let l:sep_match = matchaddpos('BufferlistHlSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         endif
                         call add(s:bufferlist_hltdef, l:sep_match)
                     endif
@@ -259,18 +225,18 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     " hl tabdat
                     if il == s:bufferlist_tabidx
                         " cur
-                        let l:hl_group = l:modify ? 'BufferlistCurmod' : 'BufferlistCurnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlCurmod' : 'BufferlistHlCurnor'
                         let l:match_id = matchadd(l:hl_group, '\%'.(il + 1).'l.*', 10)
                         call add(s:bufferlist_hltcur, l:match_id)
                         call cursor(il + 1, 1)
                     elseif l:bufinf.active
                         " vis
-                        let l:hl_group = l:modify ? 'BufferlistVismod' : 'BufferlistVisnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlVismod' : 'BufferlistHlVisnor'
                         let l:match_id = matchadd(l:hl_group, '\%'.(il + 1).'l.*', 5)
                         call add(s:bufferlist_hltvis, l:match_id)
                     else
                         " def
-                        let l:hl_group = l:modify ? 'BufferlistDefmod' : 'BufferlistDefnor'
+                        let l:hl_group = l:modify ? 'BufferlistHlDefmod' : 'BufferlistHlDefnor'
                         let l:match_id = matchadd(l:hl_group, '\%'.(il + 1).'l.*', 1)
                         call add(s:bufferlist_hltdef, l:match_id)
                     endif
@@ -526,11 +492,13 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#TabClose
     " --------------------------------------------------
     function! bufferlist#TabClose(...) abort
+
         " check win
         let l:orig_winidn = win_getid()
         let l:basic_winidn = get(filter(map(range(1, winnr('$')), 'win_getid(v:val)'), '!bufferlist#IsSpecial(winbufnr(win_id2win(v:val)))'), 0, -1)
         if l:basic_winidn != -1 && win_id2win(l:basic_winidn) != 0
             call win_gotoid(l:basic_winidn)
+
             " tab close
             let l:curr_bufnbr = bufnr('%')
             let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
@@ -569,10 +537,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                 endif
             endif
         endif
+
         " back win
         if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
             call win_gotoid(l:orig_winidn)
         endif
+
         " tab update
         call bufferlist#TabUpdtab()
     endfunction
@@ -584,22 +554,39 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         if s:bufferlist_winidn == -1 || win_id2win(s:bufferlist_winidn) == 0
             " get message
             let l:orig_winidn = win_getid()
-            " open new
-            if g:bufferlist_position == 'top'
-                execute 'silent! topleft split vim-bufferlist | resize '.g:bufferlist_winheight
-            elseif g:bufferlist_position == 'bottom'
+
+            " open win
+            if g:bufferlist_position == 'bottom'
                 execute 'silent! botright split vim-bufferlist | resize '.g:bufferlist_winheight
             elseif g:bufferlist_position == 'left'
                 execute 'silent! topleft vsplit vim-bufferlist | vertical resize '.g:bufferlist_winwidth
             elseif g:bufferlist_position == 'right'
                 execute 'silent! botright vsplit vim-bufferlist | vertical resize '.g:bufferlist_winwidth
+            else
+                execute 'silent! topleft split vim-bufferlist | resize '.g:bufferlist_winheight
             endif
+
             let s:bufferlist_bufnbr = bufnr('%')
             let s:bufferlist_winidn = win_getid()
+
             " set option
-            setlocal buftype=nofile bufhidden=hide noswapfile nobuflisted nomodifiable
-            setlocal nonumber norelativenumber nowrap nocursorline nocursorcolumn nospell
-            setlocal nofoldenable foldcolumn=0 signcolumn=no
+            call win_execute(s:bufferlist_winidn, 'setlocal buftype=nofile bufhidden=hide noswapfile nobuflisted nomodifiable')
+            call win_execute(s:bufferlist_winidn, 'setlocal nonumber norelativenumber nolist nocursorline nocursorcolumn nospell')
+            call win_execute(s:bufferlist_winidn, 'setlocal nowrap nofoldenable foldcolumn=0 signcolumn=no colorcolumn=')
+            call win_execute(s:bufferlist_winidn, 'setlocal filetype=bufferlist')
+            call win_execute(s:bufferlist_winidn, 'file vim-bufferlist')
+
+            " set win
+            if g:bufferlist_position == 'bottom'
+                call win_execute(s:bufferlist_winidn, 'setlocal winfixheight')
+            elseif g:bufferlist_position == 'left'
+                call win_execute(s:bufferlist_winidn, 'setlocal winfixwidth')
+            elseif g:bufferlist_position == 'right'
+                call win_execute(s:bufferlist_winidn, 'setlocal winfixwidth')
+            else
+                call win_execute(s:bufferlist_winidn, 'setlocal winfixheight')
+            endif
+
             " set keymap
             nnoremap <buffer> <silent> l             :call bufferlist#BufActive(1)<CR>
             nnoremap <buffer> <silent> h             :call bufferlist#BufActive(-1)<CR>
@@ -609,6 +596,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             nnoremap <buffer> <silent> <S-Tab>       :call bufferlist#BufActive(-1)<CR>
             nnoremap <buffer> <silent> <Enter>       :call bufferlist#BufActive(0)<CR>
             nnoremap <buffer> <silent> <LeftRelease> :call bufferlist#BufMouse()<CR>
+
             " back win
             if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
                 call win_gotoid(l:orig_winidn)
@@ -626,6 +614,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             call bufferlist#TabClean()
             let l:orig_winidn = win_getid()
             call win_gotoid(s:bufferlist_winidn)
+
             " del keymap
             silent! nunmap <buffer> l
             silent! nunmap <buffer> h
@@ -635,10 +624,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             silent! nunmap <buffer> <S-Tab>
             silent! nunmap <buffer> <Enter>
             silent! nunmap <buffer> <LeftRelease>
+
             " operate
             close
             let s:bufferlist_bufnbr = -1
             let s:bufferlist_winidn = -1
+
             " back win
             if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
                 call win_gotoid(l:orig_winidn)
@@ -646,17 +637,6 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         else
             let s:bufferlist_bufnbr = -1
             let s:bufferlist_winidn = -1
-        endif
-    endfunction
-
-    " --------------------------------------------------
-    " bufferlist#Toggle
-    " --------------------------------------------------
-    function! bufferlist#Toggle(...) abort
-        if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0
-            call bufferlist#WinClose()
-        else
-            call bufferlist#WinOpen()
         endif
     endfunction
 
@@ -679,24 +659,262 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     endfunction
 
     " --------------------------------------------------
+    " bufferlist#Toggle
+    " --------------------------------------------------
+    function! bufferlist#Toggle(...) abort
+        if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0
+            call bufferlist#WinClose()
+        else
+            call bufferlist#WinOpen()
+        endif
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#ColorBgtype
+    " --------------------------------------------------
+    function! bufferlist#ColorBgtype(hex) abort
+        let l:r = str2nr(a:hex[1:2], 16)
+        let l:g = str2nr(a:hex[3:4], 16)
+        let l:b = str2nr(a:hex[5:6], 16)
+        let l:brightness = (0.299 * l:r + 0.587 * l:g + 0.114 * l:b) / 255
+        return l:brightness > 0.5 ? 'White' : 'Black'
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#ColorMask
+    " --------------------------------------------------
+    function! bufferlist#ColorMask(color, alpha) abort
+        let l:res_color = a:color
+        if a:color =~? '^#[0-9a-fA-F]\{6}$' && a:alpha >= 0.0 && a:alpha <= 1.0
+            let l:r = str2nr(a:color[1:2], 16)
+            let l:g = str2nr(a:color[3:4], 16)
+            let l:b = str2nr(a:color[5:6], 16)
+
+            let l:mixed_r = float2nr(l:r * (1.0 - a:alpha) + 255 * a:alpha)
+            let l:mixed_g = float2nr(l:g * (1.0 - a:alpha) + 255 * a:alpha)
+            let l:mixed_b = float2nr(l:b * (1.0 - a:alpha) + 255 * a:alpha)
+
+            let l:mixed_r = max([0, min([255, l:mixed_r])])
+            let l:mixed_g = max([0, min([255, l:mixed_g])])
+            let l:mixed_b = max([0, min([255, l:mixed_b])])
+
+            let l:res_color = printf('#%02X%02X%02X', l:mixed_r, l:mixed_g, l:mixed_b)
+        endif
+        return l:res_color
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#ColorInvert
+    " --------------------------------------------------
+    function! bufferlist#ColorInvert(hex)
+        let sat = 1.5
+        let lit = 0.4
+
+        " HexToHSL
+        let r = str2nr(a:hex[1:2], 16) / 255.0
+        let g = str2nr(a:hex[3:4], 16) / 255.0
+        let b = str2nr(a:hex[5:6], 16) / 255.0
+
+        let max = r > g ? (r > b ? r : b) : (g > b ? g : b)
+        let min = r < g ? (r < b ? r : b) : (g < b ? g : b)
+        let delta = max - min
+
+        let l = (max + min) / 2.0
+
+        if delta == 0.0
+            let h = 0.0
+            let s = 0.0
+        else
+            let s = l < 0.5 ? delta / (max + min) : delta / (2.0 - max - min)
+            if max == r
+                let h = (g - b) / delta
+            elseif max == g
+                let h = 2.0 + (b - r) / delta
+            else
+                let h = 4.0 + (r - g) / delta
+            endif
+            let h = h * 60.0
+            if h < 0.0
+                let h = h + 360.0
+            endif
+        endif
+
+        " change saturation and light
+        let s = s * sat > 1.0 ? 1.0 : s * sat
+        let l = l * lit
+
+        " HSLToHex
+        let h = h >= 360.0 ? 0.0 : h / 360.0
+        let s = s < 0.0 ? 0.0 : s > 1.0 ? 1.0 : s
+        let l = l < 0.0 ? 0.0 : l > 1.0 ? 1.0 : l
+
+        if s == 0.0
+            let r = l
+            let g = l
+            let b = l
+        else
+            let q = l < 0.5 ? l * (1.0 + s) : l + s - l * s
+            let p = 2.0 * l - q
+
+            let rt = h + 1.0/3.0
+            let rt = rt < 0.0 ? rt + 1.0 : rt > 1.0 ? rt - 1.0 : rt
+            let r = rt < 1.0/6.0 ? p + (q - p) * 6.0 * rt : rt < 1.0/2.0 ? q : rt < 2.0/3.0 ? p + (q - p) * (2.0/3.0 - rt) * 6.0 : p
+
+            let gt = h
+            let gt = gt < 0.0 ? gt + 1.0 : gt > 1.0 ? gt - 1.0 : gt
+            let g = gt < 1.0/6.0 ? p + (q - p) * 6.0 * gt : gt < 1.0/2.0 ? q : gt < 2.0/3.0 ? p + (q - p) * (2.0/3.0 - gt) * 6.0 : p
+
+            let bt = h - 1.0/3.0
+            let bt = bt < 0.0 ? bt + 1.0 : bt > 1.0 ? bt - 1.0 : bt
+            let b = bt < 1.0/6.0 ? p + (q - p) * 6.0 * bt : bt < 1.0/2.0 ? q : bt < 2.0/3.0 ? p + (q - p) * (2.0/3.0 - bt) * 6.0 : p
+        endif
+
+        let r = float2nr(round(r * 255.0))
+        let g = float2nr(round(g * 255.0))
+        let b = float2nr(round(b * 255.0))
+        let r = r < 0 ? 0 : r > 255 ? 255 : r
+        let g = g < 0 ? 0 : g > 255 ? 255 : g
+        let b = b < 0 ? 0 : b > 255 ? 255 : b
+
+        return printf("#%02X%02X%02X", r, g, b)
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#ColorName
+    " --------------------------------------------------
+    function! bufferlist#ColorName(color)
+        let l:color_hex = {
+                    \ 'Red':            '#FF0000',
+                    \ 'LightRed':       '#FF6666',
+                    \ 'DarkRed':        '#8B0000',
+                    \ 'Green':          '#00FF00',
+                    \ 'LightGreen':     '#66FF66',
+                    \ 'DarkGreen':      '#006400',
+                    \ 'Blue':           '#0000FF',
+                    \ 'LightBlue':      '#6666FF',
+                    \ 'DarkBlue':       '#00008B',
+                    \ 'Cyan':           '#00FFFF',
+                    \ 'LightCyan':      '#66FFFF',
+                    \ 'DarkCyan':       '#008B8B',
+                    \ 'Magenta':        '#FF00FF',
+                    \ 'LightMagenta':   '#FF66FF',
+                    \ 'DarkMagenta':    '#8B008B',
+                    \ 'Yellow':         '#FFFF00',
+                    \ 'LightYellow':    '#FFFF66',
+                    \ 'Brown':          '#A52A2A',
+                    \ 'DarkYellow':     '#CCCC00',
+                    \ 'Gray':           '#808080',
+                    \ 'LightGray':      '#C0C0C0',
+                    \ 'DarkGray':       '#404040',
+                    \ 'Black':          '#000000',
+                    \ 'White':          '#FFFFFF',
+                    \ }
+
+        " parse color
+        let l:input_rgb = [0, 0, 0]
+        if a:color =~? '^#[0-9a-f]\{3}$'
+            let l:hex = a:color[1:]
+            let l:input_rgb = [str2nr(l:hex[0].l:hex[0], 16), str2nr(l:hex[1].l:hex[1], 16), str2nr(l:hex[2].l:hex[2], 16)]
+        elseif a:color =~? '^#[0-9a-f]\{6}$'
+            let l:hex = a:color[1:]
+            let l:input_rgb = [str2nr(l:hex[0:1], 16), str2nr(l:hex[2:3], 16), str2nr(l:hex[4:5], 16)]
+        elseif a:color =~? '^rgb(\s*\d\+\s*,\s*\d\+\s*,\s*\d\+\s*)$'
+            let l:parts = split(matchstr(a:color, '\d\+\s*,\s*\d\+\s*,\s*\d\+'), '\s*,\s*')
+            let l:input_rgb = [str2nr(l:parts[0]), str2nr(l:parts[1]), str2nr(l:parts[2])]
+        elseif has_key(l:color_hex, a:color)
+            let l:hex = l:color_hex[a:color][1:]
+            if len(l:hex) == 3
+                let l:input_rgb = [str2nr(l:hex[0].l:hex[0], 16), str2nr(l:hex[1].l:hex[1], 16), str2nr(l:hex[2].l:hex[2], 16)]
+            else
+                let l:input_rgb = [str2nr(l:hex[0:1], 16), str2nr(l:hex[2:3], 16), str2nr(l:hex[4:5], 16)]
+            endif
+        else
+            return 'Black'
+        endif
+
+        " check brightness
+        let l:brightness = l:input_rgb[0] * 0.299 + l:input_rgb[1] * 0.587 + l:input_rgb[2] * 0.114
+        if l:input_rgb[2] > max([l:input_rgb[0], l:input_rgb[1]]) + 20
+            return l:brightness > 150 ? 'LightBlue' : 'DarkBlue'
+        endif
+        if abs(l:input_rgb[0] - l:input_rgb[1]) < 30 && abs(l:input_rgb[1] - l:input_rgb[2]) < 30
+            if l:brightness > 180
+                return 'White'
+            elseif l:brightness > 120
+                return 'LightGray'
+            elseif l:brightness > 60
+                return 'Gray'
+            else
+                return l:brightness > 30 ? 'DarkGray' : 'Black'
+            endif
+        endif
+
+        " find name
+        let l:min_distance = 999999
+        let l:nearest_color = 'Black'
+        for [l:color_name, l:hex] in items(l:color_hex)
+            let l:palette_hex = l:hex[1:]
+            if len(l:palette_hex) == 3
+                let l:palette_rgb = [ str2nr(l:palette_hex[0].l:palette_hex[0], 16), str2nr(l:palette_hex[1].l:palette_hex[1], 16), str2nr(l:palette_hex[2].l:palette_hex[2], 16)]
+            else
+                let l:palette_rgb = [ str2nr(l:palette_hex[0:1], 16), str2nr(l:palette_hex[2:3], 16), str2nr(l:palette_hex[4:5], 16)]
+            endif
+
+            let l:dr = l:input_rgb[0] - l:palette_rgb[0]
+            let l:dg = l:input_rgb[1] - l:palette_rgb[1]
+            let l:db = l:input_rgb[2] - l:palette_rgb[2]
+            let l:distance = l:dr*l:dr*0.3 + l:dg*l:dg*0.59 + l:db*l:db*0.11
+
+            if l:distance < l:min_distance
+                let l:min_distance = l:distance
+                let l:nearest_color = l:color_name
+            endif
+        endfor
+
+        " adjust result
+        if l:brightness > 180 && l:nearest_color =~? '^Dark'
+            let l:nearest_color = substitute(l:nearest_color, 'Dark', 'Light', '')
+        elseif l:brightness < 80 && l:nearest_color =~? '^Light'
+            let l:nearest_color = substitute(l:nearest_color, 'Light', 'Dark', '')
+        endif
+
+        return l:nearest_color
+    endfunction
+
+    " --------------------------------------------------
     " bufferlist#SetHlcolor
     " --------------------------------------------------
     function! bufferlist#SetHlcolor(...) abort
-        let l:cbg = !empty(synIDattr(hlID('StatusLine'), 'bg', 'cterm')) ? synIDattr(hlID('StatusLine'), 'bg', 'cterm') : 'Black'
+        " check bgcolor
         let l:gbg = !empty(synIDattr(hlID('StatusLine'), 'bg', 'gui'))   ? synIDattr(hlID('StatusLine'), 'bg', 'gui')   : '#171C22'
-        let l:tpe = bufferlist#CalcFg(l:gbg) == "White" ? [0, 1] : [2, 3]
+        let l:hldefnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hldefnor) : g:bufferlist_hldefnor
+        let l:hldefmod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hldefmod) : g:bufferlist_hldefmod
+        let l:hlcurnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurnor) : g:bufferlist_hlcurnor
+        let l:hlcurmod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurmod) : g:bufferlist_hlcurmod
+        let l:hlvisnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlvisnor) : g:bufferlist_hlvisnor
+        let l:hlvismod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlvismod) : g:bufferlist_hlvismod
+        let l:hlsepnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlsepnor) : g:bufferlist_hlsepnor
+
         " tab default
-        execute 'hi! BufferlistDefnor ctermfg='.g:bufferlist_defnor[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_defnor[l:tpe[1]].' guibg='.bufferlist#MixWhite(l:gbg, 0.3).' gui=NONE'
-        execute 'hi! BufferlistDefmod ctermfg='.g:bufferlist_defmod[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_defmod[l:tpe[1]].' guibg='.bufferlist#MixWhite(l:gbg, 0.3).' gui=NONE'
+        execute 'hi! BufferlistHlDefnor ctermfg='.bufferlist#ColorName(l:hldefnor).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hldefnor.' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
+        execute 'hi! BufferlistHlDefmod ctermfg='.bufferlist#ColorName(l:hldefmod).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hldefmod.' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
         " tab current
-        execute 'hi! BufferlistCurnor ctermfg='.g:bufferlist_curnor[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_curnor[l:tpe[1]].' guibg='.l:gbg.' gui=NONE'
-        execute 'hi! BufferlistCurmod ctermfg='.g:bufferlist_curmod[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_curmod[l:tpe[1]].' guibg='.l:gbg.' gui=NONE'
+        execute 'hi! BufferlistHlCurnor ctermfg='.bufferlist#ColorName(l:hlcurnor).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hlcurnor.' guibg='.l:gbg.' gui=NONE'
+        execute 'hi! BufferlistHlCurmod ctermfg='.bufferlist#ColorName(l:hlcurmod).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hlcurmod.' guibg='.l:gbg.' gui=NONE'
         " tab visible
-        execute 'hi! BufferlistVisnor ctermfg='.g:bufferlist_visnor[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_visnor[l:tpe[1]].' guibg='.l:gbg.' gui=NONE'
-        execute 'hi! BufferlistVismod ctermfg='.g:bufferlist_vismod[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_vismod[l:tpe[1]].' guibg='.l:gbg.' gui=NONE'
+        execute 'hi! BufferlistHlVisnor ctermfg='.bufferlist#ColorName(l:hlvisnor).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hlvisnor.' guibg='.l:gbg.' gui=NONE'
+        execute 'hi! BufferlistHlVismod ctermfg='.bufferlist#ColorName(l:hlvismod).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hlvismod.' guibg='.l:gbg.' gui=NONE'
         " tab separator
-        execute 'hi! BufferlistSepnor ctermfg='.g:bufferlist_sepnor[l:tpe[0]].' ctermbg='.l:cbg.' cterm=NONE guifg='.g:bufferlist_sepnor[l:tpe[1]].' guibg='.bufferlist#MixWhite(l:gbg, 0.3).' gui=NONE'
-        execute 'hi! BufferlistSepmod ctermfg='.l:cbg.' ctermbg='.l:cbg.' cterm=NONE guifg='.bufferlist#MixWhite(l:gbg, 0.3).' guibg='.bufferlist#MixWhite(l:gbg, 0.3).' gui=NONE'
+        execute 'hi! BufferlistHlSepnor ctermfg='.bufferlist#ColorName(l:hlsepnor).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hlsepnor.' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
+        execute 'hi! BufferlistHlSepmod ctermfg='.bufferlist#ColorName(l:gbg).'      ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.bufferlist#ColorMask(l:gbg, 0.3).' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
+
+        " prompt message
+        hi! BufferlistPmtDefault ctermfg=Gray   ctermbg=NONE cterm=Bold guifg=#B1B3B8 guibg=NONE gui=Bold
+        hi! BufferlistPmtNormal  ctermfg=Blue   ctermbg=NONE cterm=Bold guifg=#79BBFF guibg=NONE gui=Bold
+        hi! BufferlistPmtSuccess ctermfg=Green  ctermbg=NONE cterm=Bold guifg=#95D475 guibg=NONE gui=Bold
+        hi! BufferlistPmtWarning ctermfg=Yellow ctermbg=NONE cterm=Bold guifg=#EEBE77 guibg=NONE gui=Bold
+        hi! BufferlistPmtError   ctermfg=Red    ctermbg=NONE cterm=Bold guifg=#F56C6C guibg=NONE gui=Bold
+
         " update bufferlist
         call bufferlist#TabUpdbuf()
     endfunction
@@ -775,7 +993,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     endfunction
 
     " --------------------------------------------------
-    " bufferlaaaist#BuildCmd
+    " bufferlist#BuildCmd
     " --------------------------------------------------
     function! bufferlist#BuildCmd(...) abort
         augroup bufferlist_cmd_sub
@@ -785,7 +1003,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             autocmd TextChanged * call bufferlist#TabTupdbuf()
             autocmd ModeChanged [iI]:[n] call bufferlist#TabTupdbuf()
             autocmd BufRead * call bufferlist#TabOpen()
-            autocmd WinResized * call bufferlist#BufActive(0)
+            "autocmd WinResized * call bufferlist#BufActive(0)
             if exists('g:bufferlist_reopen') && g:bufferlist_reopen == 1
                 autocmd BufAdd,BufEnter * call bufferlist#ReopenBuild(str2nr(expand('<abuf>')))
                 autocmd BufDelete * call bufferlist#ReopenClose(expand('<afile>:p'))
@@ -801,6 +1019,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         autocmd ColorScheme * call bufferlist#SetHlcolor()
         autocmd VimEnter * call bufferlist#SetHlcolor()
         autocmd VimEnter * nested call bufferlist#BuildCmd()
+        if g:bufferlist_autostart == 1
+            autocmd VimEnter * call timer_start(0, {-> execute('BufferlistOpen', '')})
+        endif
         if exists('g:bufferlist_reopen') && g:bufferlist_reopen == 1
             autocmd VimEnter * call timer_start(0, {-> execute('call bufferlist#ReopenRestore()', '')})
         endif
@@ -822,9 +1043,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " --------------------------------------------------
     " command
     " --------------------------------------------------
-    command!                         BufferlistToggle   call bufferlist#Toggle()
     command!                         BufferlistOpen     call bufferlist#Open()
     command!                         BufferlistClose    call bufferlist#Close()
+    command!                         BufferlistToggle   call bufferlist#Toggle()
     command! -nargs=? -complete=file BufferlistTabnew   call bufferlist#TabNew(<f-args>)
     command!                         BufferlistTabClose call bufferlist#TabClose()
 
