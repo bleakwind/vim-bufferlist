@@ -67,7 +67,7 @@ let s:bufferlist_filedata   = {}
 " bufferlist detail
 " g:bufferlist_enabled = 1
 " ============================================================================
-if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
+if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
 
     " --------------------------------------------------
     " bufferlist#IsSpecial
@@ -86,10 +86,10 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " --------------------------------------------------
     function! bufferlist#TabCollect(...) abort
         " set variable
-        let s:bufferlist_ifhorz = g:bufferlist_position == 'top' || g:bufferlist_position == 'bottom' ? 1 : 0
+        let s:bufferlist_ifhorz = g:bufferlist_position ==# 'top' || g:bufferlist_position ==# 'bottom' ? 1 : 0
 
         " check winidn
-        if (s:bufferlist_bufnbr != -1 && bufexists(s:bufferlist_bufnbr) == 0) || (s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) == 0)
+        if (s:bufferlist_bufnbr != -1 && bufexists(s:bufferlist_bufnbr) ==# 0) || (s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) ==# 0)
             let s:bufferlist_bufnbr = -1
             let s:bufferlist_winidn = -1
         endif
@@ -107,7 +107,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             if !empty(l:buflst)
                 for il in l:buflst
                     " ready value
-                    let l:otabnm = get(filter(map(copy(l:orig_bufinf), 'v:val.bufnbr == il.bufnr ? v:val.tabnme : ""'), 'v:val != ""'), 0, '')
+                    let l:otabnm = get(filter(map(copy(l:orig_bufinf), 'v:val.bufnbr ==# il.bufnr ? v:val.tabnme : ""'), 'v:val != ""'), 0, '')
                     " set value
                     let l:bufnbr = il.bufnr
                     let l:bufnme = bufname(il.bufnr)
@@ -121,7 +121,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     endif
                     let l:modify = getbufvar(il.bufnr, '&modified') ? g:bufferlist_modifmark : ''
                     let l:tabdat = ' '.l:tabnme.l:modify.' '
-                    let l:active = il.bufnr == l:orig_bufnbr ? 1 : 0
+                    let l:active = il.bufnr ==# l:orig_bufnbr ? 1 : 0
                     let l:length = strlen(l:tabnme) + strlen(l:modify) + 2
                     let l:filepath = empty(l:bufnme) ? '' : fnamemodify(l:bufnme, ':p')
                     " set list
@@ -180,7 +180,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     " hl leftsepar
                     if il > 0
                         let l:sep_pos = l:pos - strlen(g:bufferlist_horzsepar)
-                        if il == s:bufferlist_tabidx || il - 1 == s:bufferlist_tabidx || l:bufinf.active || s:bufferlist_bufinf[il-1].active
+                        if il ==# s:bufferlist_tabidx || il - 1 ==# s:bufferlist_tabidx || l:bufinf.active || s:bufferlist_bufinf[il-1].active
                             let l:sep_match = matchaddpos('BufferlistHlSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         else
                             let l:sep_match = matchaddpos('BufferlistHlSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
@@ -188,12 +188,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                         call add(s:bufferlist_hltdef, l:sep_match)
                     endif
                     " hl tabdat
-                    if il == s:bufferlist_tabidx
+                    if il ==# s:bufferlist_tabidx
                         " cur
                         let l:hl_group = l:modify ? 'BufferlistHlCurmod' : 'BufferlistHlCurnor'
                         let l:match_id = matchaddpos(l:hl_group, [[1, l:pos, l:bufinf.length]], 10)
                         call add(s:bufferlist_hltcur, l:match_id)
-                        call cursor(1, l:pos)
+                        keepjumps call setpos('.', [0, 1, l:pos, 0])
                     elseif l:bufinf.active
                         " vis
                         let l:hl_group = l:modify ? 'BufferlistHlVismod' : 'BufferlistHlVisnor'
@@ -208,7 +208,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     " hl rightsepar
                     if il < len(s:bufferlist_bufinf) - 1
                         let l:sep_pos = l:pos + l:bufinf.length
-                        if il == s:bufferlist_tabidx || l:bufinf.active
+                        if il ==# s:bufferlist_tabidx || l:bufinf.active
                             let l:sep_match = matchaddpos('BufferlistHlSepmod', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
                         else
                             let l:sep_match = matchaddpos('BufferlistHlSepnor', [[1, l:sep_pos, strlen(g:bufferlist_horzsepar)]], 0)
@@ -223,12 +223,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     let l:bufinf = s:bufferlist_bufinf[il]
                     let l:modify = !empty(l:bufinf.modify)
                     " hl tabdat
-                    if il == s:bufferlist_tabidx
+                    if il ==# s:bufferlist_tabidx
                         " cur
                         let l:hl_group = l:modify ? 'BufferlistHlCurmod' : 'BufferlistHlCurnor'
                         let l:match_id = matchadd(l:hl_group, '\%'.(il + 1).'l.*', 10)
                         call add(s:bufferlist_hltcur, l:match_id)
-                        call cursor(il + 1, 1)
+                        keepjumps call setpos('.', [0, il + 1, 1, 0])
                     elseif l:bufinf.active
                         " vis
                         let l:hl_group = l:modify ? 'BufferlistHlVismod' : 'BufferlistHlVisnor'
@@ -273,7 +273,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#TabTupdtab
     " --------------------------------------------------
     function! bufferlist#TabTupdtab(...) abort
-        if &modified == 1
+        if &modified ==# 1
             if s:bufferlist_timertab != -1
                 call timer_stop(s:bufferlist_timertab)
                 let s:bufferlist_timertab = -1
@@ -296,7 +296,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#TabTupdbuf
     " --------------------------------------------------
     function! bufferlist#TabTupdbuf(...) abort
-        if &modified == 1
+        if &modified ==# 1
             if s:bufferlist_timerbuf != -1
                 call timer_stop(s:bufferlist_timerbuf)
                 let s:bufferlist_timerbuf = -1
@@ -344,25 +344,25 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                 if l:basic_winidn != -1 && win_id2win(l:basic_winidn) != 0
                     call win_gotoid(l:basic_winidn)
                 else
-                    if g:bufferlist_position == 'top'
+                    if g:bufferlist_position ==# 'top'
                         execute 'silent! botright split'
-                    elseif g:bufferlist_position == 'bottom'
+                    elseif g:bufferlist_position ==# 'bottom'
                         execute 'silent! topleft split'
-                    elseif g:bufferlist_position == 'left'
+                    elseif g:bufferlist_position ==# 'left'
                         execute 'silent! botright vsplit'
-                    elseif g:bufferlist_position == 'right'
+                    elseif g:bufferlist_position ==# 'right'
                         execute 'silent! topleft vsplit'
                     endif
                 endif
                 execute 'buffer '.l:bufnbr
                 if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0
-                    if g:bufferlist_position == 'top'
+                    if g:bufferlist_position ==# 'top'
                         execute win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winheight
-                    elseif g:bufferlist_position == 'bottom'
+                    elseif g:bufferlist_position ==# 'bottom'
                         execute win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winheight
-                    elseif g:bufferlist_position == 'left'
+                    elseif g:bufferlist_position ==# 'left'
                         execute 'vertical '.win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winwidth
-                    elseif g:bufferlist_position == 'right'
+                    elseif g:bufferlist_position ==# 'right'
                         execute 'vertical '.win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winwidth
                     endif
                 endif
@@ -393,7 +393,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                     let l:curr_bufnbr = bufnr('%')
                     let l:curr_bufidx = -1
                     for il in range(len(l:buflst))
-                        if l:buflst[il].bufnr == l:curr_bufnbr
+                        if l:buflst[il].bufnr ==# l:curr_bufnbr
                             let l:curr_bufidx = il
                             break
                         endif
@@ -471,11 +471,11 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     function! bufferlist#TabOpen(...) abort
         " tab check
         let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
-        if len(l:buflst) == 2
+        if len(l:buflst) ==# 2
             for il in range(len(l:buflst))
                 if l:buflst[il].bufnr != bufnr('%')
-                    let l:file_empty = getbufvar(l:buflst[il].bufnr, '&modified') == 0 && trim(join(getbufline(l:buflst[il].bufnr, 1, '$'), '')) == '' && filereadable(expand('#'.l:buflst[il].bufnr.':p')) == 0
-                    if l:file_empty == 1
+                    let l:file_empty = getbufvar(l:buflst[il].bufnr, '&modified') ==# 0 && trim(join(getbufline(l:buflst[il].bufnr, 1, '$'), '')) ==# '' && filereadable(expand('#'.l:buflst[il].bufnr.':p')) ==# 0
+                    if l:file_empty ==# 1
                         execute 'bwipeout' l:buflst[il].bufnr
                         let s:bufferlist_untnum = 0
                     endif
@@ -506,7 +506,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                 " current index
                 let l:curr_bufidx = -1
                 for il in range(len(l:buflst))
-                    if l:buflst[il].bufnr == l:curr_bufnbr
+                    if l:buflst[il].bufnr ==# l:curr_bufnbr
                         let l:curr_bufidx = il
                         break
                     endif
@@ -527,7 +527,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
                 execute 'bwipeout' l:curr_bufnbr
             else
                 " last tab
-                if getbufvar(l:curr_bufnbr, '&modified') == 1
+                if getbufvar(l:curr_bufnbr, '&modified') ==# 1
                     echohl ErrorMsg | echo "Warning: Please save this file first..." | echohl None
                 elseif !filereadable(expand('#'.l:curr_bufnbr.':p'))
                     echohl WarningMsg | echo "Warning: You already closed all buffer..." | echohl None
@@ -551,16 +551,16 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#WinOpen
     " --------------------------------------------------
     function! bufferlist#WinOpen(...) abort
-        if s:bufferlist_winidn == -1 || win_id2win(s:bufferlist_winidn) == 0
+        if s:bufferlist_winidn ==# -1 || win_id2win(s:bufferlist_winidn) ==# 0
             " get message
             let l:orig_winidn = win_getid()
 
             " open win
-            if g:bufferlist_position == 'bottom'
+            if g:bufferlist_position ==# 'bottom'
                 execute 'silent! botright split vim-bufferlist | resize '.g:bufferlist_winheight
-            elseif g:bufferlist_position == 'left'
+            elseif g:bufferlist_position ==# 'left'
                 execute 'silent! topleft vsplit vim-bufferlist | vertical resize '.g:bufferlist_winwidth
-            elseif g:bufferlist_position == 'right'
+            elseif g:bufferlist_position ==# 'right'
                 execute 'silent! botright vsplit vim-bufferlist | vertical resize '.g:bufferlist_winwidth
             else
                 execute 'silent! topleft split vim-bufferlist | resize '.g:bufferlist_winheight
@@ -577,11 +577,11 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             call win_execute(s:bufferlist_winidn, 'file vim-bufferlist')
 
             " set win
-            if g:bufferlist_position == 'bottom'
+            if g:bufferlist_position ==# 'bottom'
                 call win_execute(s:bufferlist_winidn, 'setlocal winfixheight')
-            elseif g:bufferlist_position == 'left'
+            elseif g:bufferlist_position ==# 'left'
                 call win_execute(s:bufferlist_winidn, 'setlocal winfixwidth')
-            elseif g:bufferlist_position == 'right'
+            elseif g:bufferlist_position ==# 'right'
                 call win_execute(s:bufferlist_winidn, 'setlocal winfixwidth')
             else
                 call win_execute(s:bufferlist_winidn, 'setlocal winfixheight')
@@ -644,7 +644,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     " bufferlist#Open
     " --------------------------------------------------
     function! bufferlist#Open(...) abort
-        if s:bufferlist_winidn == -1 || win_id2win(s:bufferlist_winidn) == 0
+        if s:bufferlist_winidn ==# -1 || win_id2win(s:bufferlist_winidn) ==# 0
             call bufferlist#WinOpen()
         endif
     endfunction
@@ -721,14 +721,14 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
 
         let l = (max + min) / 2.0
 
-        if delta == 0.0
+        if delta ==# 0.0
             let h = 0.0
             let s = 0.0
         else
             let s = l < 0.5 ? delta / (max + min) : delta / (2.0 - max - min)
-            if max == r
+            if max ==# r
                 let h = (g - b) / delta
-            elseif max == g
+            elseif max ==# g
                 let h = 2.0 + (b - r) / delta
             else
                 let h = 4.0 + (r - g) / delta
@@ -748,7 +748,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         let s = s < 0.0 ? 0.0 : s > 1.0 ? 1.0 : s
         let l = l < 0.0 ? 0.0 : l > 1.0 ? 1.0 : l
 
-        if s == 0.0
+        if s ==# 0.0
             let r = l
             let g = l
             let b = l
@@ -823,7 +823,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             let l:input_rgb = [str2nr(l:parts[0]), str2nr(l:parts[1]), str2nr(l:parts[2])]
         elseif has_key(l:color_hex, a:color)
             let l:hex = l:color_hex[a:color][1:]
-            if len(l:hex) == 3
+            if len(l:hex) ==# 3
                 let l:input_rgb = [str2nr(l:hex[0].l:hex[0], 16), str2nr(l:hex[1].l:hex[1], 16), str2nr(l:hex[2].l:hex[2], 16)]
             else
                 let l:input_rgb = [str2nr(l:hex[0:1], 16), str2nr(l:hex[2:3], 16), str2nr(l:hex[4:5], 16)]
@@ -854,7 +854,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         let l:nearest_color = 'Black'
         for [l:color_name, l:hex] in items(l:color_hex)
             let l:palette_hex = l:hex[1:]
-            if len(l:palette_hex) == 3
+            if len(l:palette_hex) ==# 3
                 let l:palette_rgb = [ str2nr(l:palette_hex[0].l:palette_hex[0], 16), str2nr(l:palette_hex[1].l:palette_hex[1], 16), str2nr(l:palette_hex[2].l:palette_hex[2], 16)]
             else
                 let l:palette_rgb = [ str2nr(l:palette_hex[0:1], 16), str2nr(l:palette_hex[2:3], 16), str2nr(l:palette_hex[4:5], 16)]
@@ -887,13 +887,13 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
     function! bufferlist#SetHlcolor(...) abort
         " check bgcolor
         let l:gbg = !empty(synIDattr(hlID('StatusLine'), 'bg', 'gui'))   ? synIDattr(hlID('StatusLine'), 'bg', 'gui')   : '#171C22'
-        let l:hldefnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hldefnor) : g:bufferlist_hldefnor
-        let l:hldefmod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hldefmod) : g:bufferlist_hldefmod
-        let l:hlcurnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurnor) : g:bufferlist_hlcurnor
-        let l:hlcurmod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurmod) : g:bufferlist_hlcurmod
-        let l:hlvisnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlvisnor) : g:bufferlist_hlvisnor
-        let l:hlvismod = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlvismod) : g:bufferlist_hlvismod
-        let l:hlsepnor = bufferlist#ColorBgtype(l:gbg) == "White" ? bufferlist#ColorInvert(g:bufferlist_hlsepnor) : g:bufferlist_hlsepnor
+        let l:hldefnor = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hldefnor) : g:bufferlist_hldefnor
+        let l:hldefmod = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hldefmod) : g:bufferlist_hldefmod
+        let l:hlcurnor = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurnor) : g:bufferlist_hlcurnor
+        let l:hlcurmod = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hlcurmod) : g:bufferlist_hlcurmod
+        let l:hlvisnor = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hlvisnor) : g:bufferlist_hlvisnor
+        let l:hlvismod = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hlvismod) : g:bufferlist_hlvismod
+        let l:hlsepnor = bufferlist#ColorBgtype(l:gbg) ==# "White" ? bufferlist#ColorInvert(g:bufferlist_hlsepnor) : g:bufferlist_hlsepnor
 
         " tab default
         execute 'hi! BufferlistHlDefnor ctermfg='.bufferlist#ColorName(l:hldefnor).' ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.l:hldefnor.' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
@@ -926,15 +926,15 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         if !isdirectory(g:bufferlist_filepath)
             call mkdir(g:bufferlist_filepath, 'p', 0777)
         endif
-        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover == 1
+        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover ==# 1
             let l:savelist = []
             let l:bufname = fnamemodify(bufname(a:buf), ':p')
-            let l:buflist = filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&buftype") == ""')
+            let l:buflist = filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&buftype") ==# ""')
             if index(l:buflist, a:buf) != -1
                 for il in l:buflist
                     let l:name = fnamemodify(bufname(il), ':p')
                     if !empty(l:name)
-                        if l:name == l:bufname
+                        if l:name ==# l:bufname
                             call add(l:savelist, l:name."|C|1|1|1")
                         else
                             call add(l:savelist, l:name."|X|1|1|1")
@@ -954,7 +954,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         if !isdirectory(g:bufferlist_filepath)
             call mkdir(g:bufferlist_filepath, 'p', 0777)
         endif
-        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover == 1
+        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover ==# 1
             let l:savelist = []
             let s:bufferlist_filedata = readfile(s:bufferlist_filelist)
             for il in s:bufferlist_filedata
@@ -979,7 +979,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             for il in s:bufferlist_filedata
                 let l:rec = split(il, '|')
                 if exists('l:rec[0]') && l:rec[0] != "" && filereadable(l:rec[0])
-                    if l:rec[1] == 'C'
+                    if l:rec[1] ==# 'C'
                         let l:currfile = l:rec[0]
                     endif
                     silent execute "edit ".l:rec[0]
@@ -1004,7 +1004,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
             autocmd ModeChanged [iI]:[n] call bufferlist#TabTupdbuf()
             autocmd BufRead * call bufferlist#TabOpen()
             "autocmd WinResized * call bufferlist#BufActive(0)
-            if exists('g:bufferlist_reopen') && g:bufferlist_reopen == 1
+            if exists('g:bufferlist_reopen') && g:bufferlist_reopen ==# 1
                 autocmd BufAdd,BufEnter * call bufferlist#ReopenBuild(str2nr(expand('<abuf>')))
                 autocmd BufDelete * call bufferlist#ReopenClose(expand('<afile>:p'))
             endif
@@ -1019,10 +1019,10 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled == 1
         autocmd ColorScheme * call bufferlist#SetHlcolor()
         autocmd VimEnter * call bufferlist#SetHlcolor()
         autocmd VimEnter * nested call bufferlist#BuildCmd()
-        if g:bufferlist_autostart == 1
+        if g:bufferlist_autostart ==# 1
             autocmd VimEnter * call timer_start(0, {-> execute('BufferlistOpen', '')})
         endif
-        if exists('g:bufferlist_reopen') && g:bufferlist_reopen == 1
+        if exists('g:bufferlist_reopen') && g:bufferlist_reopen ==# 1
             autocmd VimEnter * call timer_start(0, {-> execute('call bufferlist#ReopenRestore()', '')})
         endif
     augroup END
