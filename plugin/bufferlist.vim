@@ -368,6 +368,48 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 endif
             endif
 
+            " make tab visible
+            if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0 && !empty(s:bufferlist_bufinf)
+                call win_gotoid(s:bufferlist_winidn)
+                let l:curr_tab = s:bufferlist_bufinf[s:bufferlist_tabidx]
+                if s:bufferlist_ifhorz
+                    " horizontal
+                    let l:win_width = winwidth(s:bufferlist_winidn)
+                    let l:curr_begtab = 1
+                    for il in range(len(s:bufferlist_bufinf))
+                        let l:bufinf = s:bufferlist_bufinf[il]
+                        if il == s:bufferlist_tabidx
+                            break
+                        endif
+                        let l:curr_begtab += l:bufinf.length + strlen(g:bufferlist_horzsepar)
+                    endfor
+                    let l:curr_endtab = l:curr_begtab + l:curr_tab.length - 1
+                    let l:curr_curtab = winsaveview().leftcol
+                    " check tab outside
+                    if l:curr_begtab < (l:curr_curtab + 1) || l:curr_endtab > (l:curr_curtab + l:win_width)
+                        let l:target_scroll = l:curr_begtab - (l:win_width / 2) + (l:curr_tab.length / 2)
+                        if l:target_scroll < 0
+                            let l:target_scroll = 0
+                        endif
+                        call winrestview({'leftcol': l:target_scroll})
+                    endif
+                else
+                    " vertical
+                    let l:win_height = winheight(s:bufferlist_winidn)
+                    let l:curr_begtab = winsaveview().topline
+                    let l:curr_endtab = l:curr_begtab + l:win_height - 1
+                    let l:curr_curtab = s:bufferlist_tabidx + 1
+                    " check tab outside
+                    if l:curr_curtab < l:curr_begtab || l:curr_curtab > l:curr_endtab
+                        let l:target_topline = l:curr_curtab - (l:win_height / 2)
+                        if l:target_topline < 1
+                            let l:target_topline = 1
+                        endif
+                        call winrestview({'topline': l:target_topline})
+                    endif
+                endif
+            endif
+
             " back win
             if a:1 != 0 && l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
                 call win_gotoid(l:orig_winidn)
@@ -932,17 +974,18 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             let l:buflist = filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&buftype") ==# ""')
             if index(l:buflist, a:buf) != -1
                 for il in l:buflist
-                    let l:name = fnamemodify(bufname(il), ':p')
-                    if !empty(l:name)
-                        if l:name ==# l:bufname
-                            call add(l:savelist, l:name."|C|1|1|1")
+                    let l:enitem = fnamemodify(bufname(il), ':p')
+                    if !empty(l:enitem)
+                        let l:enitem = substitute(l:enitem, ' ', '\\ ', 'g')
+                        if l:enitem ==# l:bufname
+                            call add(l:savelist, l:enitem." C")
                         else
-                            call add(l:savelist, l:name."|X|1|1|1")
+                            call add(l:savelist, l:enitem." X")
                         endif
                     endif
                 endfor
                 let s:bufferlist_filedata = l:savelist
-                call writefile(s:bufferlist_filedata, s:bufferlist_filelist, 'b')
+                call writefile(s:bufferlist_filedata, s:bufferlist_filelist)
             endif
         endif
     endfunction
@@ -958,13 +1001,18 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             let l:savelist = []
             let s:bufferlist_filedata = readfile(s:bufferlist_filelist)
             for il in s:bufferlist_filedata
-                let l:rec = split(il, '|')
-                if (l:rec[0] != a:buf)
-                    call add(l:savelist, l:rec[0]."|X|".l:rec[2]."|".l:rec[3]."|".l:rec[4]."")
+                let il = substitute(il, '\\ ', "\u0001", 'g')
+                let l:rec = split(il, ' ', 1)
+                if len(l:rec) >= 2
+                    let l:deitem = substitute(l:rec[0], "\u0001", ' ', 'g')
+                    if (l:deitem != a:buf)
+                        let l:enitem = substitute(l:deitem, ' ', '\\ ', 'g')
+                        call add(l:savelist, l:enitem." X")
+                    endif
                 endif
             endfor
             let s:bufferlist_filedata = l:savelist
-            call writefile(s:bufferlist_filedata, s:bufferlist_filelist, 'b')
+            call writefile(s:bufferlist_filedata, s:bufferlist_filelist)
         endif
     endfunction
 
@@ -977,16 +1025,20 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             let l:currfile = ''
             let s:bufferlist_filedata = readfile(s:bufferlist_filelist)
             for il in s:bufferlist_filedata
-                let l:rec = split(il, '|')
-                if exists('l:rec[0]') && l:rec[0] != "" && filereadable(l:rec[0])
-                    if l:rec[1] ==# 'C'
-                        let l:currfile = l:rec[0]
+                let il = substitute(il, '\\ ', "\u0001", 'g')
+                let l:rec = split(il, ' ', 1)
+                if len(l:rec) >= 2
+                    let l:deitem = substitute(l:rec[0], "\u0001", ' ', 'g')
+                    if l:deitem != "" && filereadable(l:deitem)
+                        if l:rec[1] ==# 'C'
+                            let l:currfile = l:deitem
+                        endif
+                        silent execute "edit ".fnameescape(l:deitem)
                     endif
-                    silent execute "edit ".l:rec[0]
                 endif
             endfor
             if !empty(l:currfile)
-                silent execute "edit ".l:currfile
+                silent execute "edit ".fnameescape(l:currfile)
             endif
         endif
         let s:bufferlist_restover = 1
