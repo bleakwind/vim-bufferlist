@@ -976,10 +976,11 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 for il in l:buflist
                     let l:enitem = fnamemodify(bufname(il), ':p')
                     if !empty(l:enitem)
-                        let l:enitem = substitute(l:enitem, ' ', '\\ ', 'g')
                         if l:enitem ==# l:bufname
+                            let l:enitem = substitute(l:enitem, ' ', '\\ ', 'g')
                             call add(l:savelist, l:enitem." C")
                         else
+                            let l:enitem = substitute(l:enitem, ' ', '\\ ', 'g')
                             call add(l:savelist, l:enitem." X")
                         endif
                     endif
