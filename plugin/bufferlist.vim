@@ -243,6 +243,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 endfor
             endif
 
+            " tab visible
+            call bufferlist#TabVisible()
+
             " back win
             if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
                 call win_gotoid(l:orig_winidn)
@@ -322,6 +325,58 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     endfunction
 
     " --------------------------------------------------
+    " bufferlist#TabVisible
+    " --------------------------------------------------
+    function! bufferlist#TabVisible(...) abort
+        if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0 && !empty(s:bufferlist_bufinf)
+            let l:orig_winidn = win_getid()
+            " goto bufferlist win
+            call win_gotoid(s:bufferlist_winidn)
+            let l:curr_tab = s:bufferlist_bufinf[s:bufferlist_tabidx]
+            if s:bufferlist_ifhorz
+                " horizontal
+                let l:win_width = winwidth(s:bufferlist_winidn)
+                let l:curr_begtab = 1
+                for il in range(len(s:bufferlist_bufinf))
+                    let l:bufinf = s:bufferlist_bufinf[il]
+                    if il == s:bufferlist_tabidx
+                        break
+                    endif
+                    let l:curr_begtab += l:bufinf.length + strlen(g:bufferlist_horzsepar)
+                endfor
+                let l:curr_endtab = l:curr_begtab + l:curr_tab.length - 1
+                let l:curr_curtab = winsaveview().leftcol
+                " check tab outside
+                if l:curr_begtab < (l:curr_curtab + 1) || l:curr_endtab > (l:curr_curtab + l:win_width)
+                    let l:target_scroll = l:curr_begtab - (l:win_width / 2) + (l:curr_tab.length / 2)
+                    if l:target_scroll < 0
+                        let l:target_scroll = 0
+                    endif
+                    call winrestview({'leftcol': l:target_scroll})
+                endif
+            else
+                " vertical
+                let l:win_height = winheight(s:bufferlist_winidn)
+                let l:curr_begtab = winsaveview().topline
+                let l:curr_endtab = l:curr_begtab + l:win_height - 1
+                let l:curr_curtab = s:bufferlist_tabidx + 1
+                " check tab outside
+                if l:curr_curtab < l:curr_begtab || l:curr_curtab > l:curr_endtab
+                    let l:target_topline = l:curr_curtab - (l:win_height / 2)
+                    if l:target_topline < 1
+                        let l:target_topline = 1
+                    endif
+                    call winrestview({'topline': l:target_topline})
+                endif
+            endif
+            " back win
+            if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
+                call win_gotoid(l:orig_winidn)
+            endif
+        endif
+    endfunction
+
+    " --------------------------------------------------
     " bufferlist#BufActive
     " --------------------------------------------------
     function! bufferlist#BufActive(...) abort
@@ -364,48 +419,6 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                         execute 'vertical '.win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winwidth
                     elseif g:bufferlist_position ==# 'right'
                         execute 'vertical '.win_id2win(s:bufferlist_winidn).'resize '.g:bufferlist_winwidth
-                    endif
-                endif
-            endif
-
-            " make tab visible
-            if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0 && !empty(s:bufferlist_bufinf)
-                call win_gotoid(s:bufferlist_winidn)
-                let l:curr_tab = s:bufferlist_bufinf[s:bufferlist_tabidx]
-                if s:bufferlist_ifhorz
-                    " horizontal
-                    let l:win_width = winwidth(s:bufferlist_winidn)
-                    let l:curr_begtab = 1
-                    for il in range(len(s:bufferlist_bufinf))
-                        let l:bufinf = s:bufferlist_bufinf[il]
-                        if il == s:bufferlist_tabidx
-                            break
-                        endif
-                        let l:curr_begtab += l:bufinf.length + strlen(g:bufferlist_horzsepar)
-                    endfor
-                    let l:curr_endtab = l:curr_begtab + l:curr_tab.length - 1
-                    let l:curr_curtab = winsaveview().leftcol
-                    " check tab outside
-                    if l:curr_begtab < (l:curr_curtab + 1) || l:curr_endtab > (l:curr_curtab + l:win_width)
-                        let l:target_scroll = l:curr_begtab - (l:win_width / 2) + (l:curr_tab.length / 2)
-                        if l:target_scroll < 0
-                            let l:target_scroll = 0
-                        endif
-                        call winrestview({'leftcol': l:target_scroll})
-                    endif
-                else
-                    " vertical
-                    let l:win_height = winheight(s:bufferlist_winidn)
-                    let l:curr_begtab = winsaveview().topline
-                    let l:curr_endtab = l:curr_begtab + l:win_height - 1
-                    let l:curr_curtab = s:bufferlist_tabidx + 1
-                    " check tab outside
-                    if l:curr_curtab < l:curr_begtab || l:curr_curtab > l:curr_endtab
-                        let l:target_topline = l:curr_curtab - (l:win_height / 2)
-                        if l:target_topline < 1
-                            let l:target_topline = 1
-                        endif
-                        call winrestview({'topline': l:target_topline})
                     endif
                 endif
             endif
