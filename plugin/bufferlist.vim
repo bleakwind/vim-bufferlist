@@ -330,6 +330,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     function! bufferlist#TabVisible(...) abort
         if s:bufferlist_winidn != -1 && win_id2win(s:bufferlist_winidn) != 0 && !empty(s:bufferlist_bufinf)
             let l:orig_winidn = win_getid()
+            " check tab index
+            if s:bufferlist_tabidx < 0
+                let s:bufferlist_tabidx = 0
+            elseif s:bufferlist_tabidx >= len(s:bufferlist_bufinf)
+                let s:bufferlist_tabidx = len(s:bufferlist_bufinf) - 1
+            endif
             " goto bufferlist win
             call win_gotoid(s:bufferlist_winidn)
             let l:curr_tab = s:bufferlist_bufinf[s:bufferlist_tabidx]
@@ -524,19 +530,23 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#TabOpen
     " --------------------------------------------------
     function! bufferlist#TabOpen(...) abort
-        " tab check
-        let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
-        if len(l:buflst) ==# 2
-            for il in range(len(l:buflst))
-                if l:buflst[il].bufnr != bufnr('%')
-                    let l:file_empty = getbufvar(l:buflst[il].bufnr, '&modified') ==# 0 && trim(join(getbufline(l:buflst[il].bufnr, 1, '$'), '')) ==# '' && filereadable(expand('#'.l:buflst[il].bufnr.':p')) ==# 0
-                    if l:file_empty ==# 1
-                        execute 'bwipeout' l:buflst[il].bufnr
-                        let s:bufferlist_untnum = 0
+        " tab load
+        let l:bufall = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr)')
+        for buf in l:bufall
+            if !buf.loaded
+                call bufload(buf.bufnr)
+            endif
+            " close untitled tab
+            let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
+            if len(l:buflst) ==# 2
+                for il in l:buflst
+                    if getbufvar(il.bufnr, '&modified') ==# 0 && trim(join(getbufline(il.bufnr, 1, '$'), '')) ==# '' && filereadable(expand('#'.il.bufnr.':p')) ==# 0
+                        execute 'silent! bwipeout' il.bufnr
+                        break
                     endif
-                endif
-            endfor
-        endif
+                endfor
+            endif
+        endfor
         " tab update
         if !bufferlist#IsSpecial(bufnr('%'))
             call bufferlist#TabUpdtab()
@@ -1064,12 +1074,10 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     function! bufferlist#BuildCmd(...) abort
         augroup bufferlist_cmd_sub
             autocmd!
-            " BufNew
+            autocmd BufRead * call bufferlist#TabOpen()
             autocmd BufEnter,WinEnter,BufWipeout,BufWritePost * noautocmd call bufferlist#TabUpdbuf()
             autocmd TextChanged * call bufferlist#TabTupdbuf()
             autocmd ModeChanged [iI]:[n] call bufferlist#TabTupdbuf()
-            autocmd BufRead * call bufferlist#TabOpen()
-            "autocmd WinResized * call bufferlist#BufActive(0)
             if exists('g:bufferlist_reopen') && g:bufferlist_reopen ==# 1
                 autocmd BufAdd,BufEnter * call bufferlist#ReopenBuild(str2nr(expand('<abuf>')))
                 autocmd BufDelete * call bufferlist#ReopenClose(expand('<afile>:p'))
