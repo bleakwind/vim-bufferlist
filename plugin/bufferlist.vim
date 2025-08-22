@@ -991,6 +991,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
         if !isdirectory(g:bufferlist_datapath)
             call mkdir(g:bufferlist_datapath, 'p', 0777)
         endif
+        if !filereadable(s:bufferlist_reopenlist)
+            call writefile([], s:bufferlist_reopenlist)
+        endif
         if filereadable(s:bufferlist_reopenlist) && s:bufferlist_restover ==# 1
             let l:savelist = []
             let l:bufname = fnamemodify(bufname(a:buf), ':p')
@@ -1020,6 +1023,9 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     function! bufferlist#ReopenClose(buf)
         if !isdirectory(g:bufferlist_datapath)
             call mkdir(g:bufferlist_datapath, 'p', 0777)
+        endif
+        if !filereadable(s:bufferlist_reopenlist)
+            call writefile([], s:bufferlist_reopenlist)
         endif
         if filereadable(s:bufferlist_reopenlist) && s:bufferlist_restover ==# 1
             let l:savelist = []
