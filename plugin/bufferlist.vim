@@ -45,7 +45,7 @@ let g:bufferlist_hlsepnor   = get(g:, 'bufferlist_hlsepnor',    '#AAAAAA')
 
 " reopen file
 let g:bufferlist_reopen     = get(g:, 'bufferlist_reopen',      0)
-let g:bufferlist_filepath   = get(g:, 'bufferlist_filepath',    $HOME.'/.vim/bufferlist')
+let g:bufferlist_datapath   = get(g:, 'bufferlist_datapath',    $HOME.'/.vim/bufferlist')
 
 " plugin variable
 let s:bufferlist_bufnbr     = -1
@@ -60,8 +60,8 @@ let s:bufferlist_hltvis     = []
 let s:bufferlist_timertab   = -1
 let s:bufferlist_timerbuf   = -1
 let s:bufferlist_restover   = 0
-let s:bufferlist_filelist   = g:bufferlist_filepath.'/filelist'
-let s:bufferlist_filedata   = {}
+let s:bufferlist_reopenlist = g:bufferlist_datapath.'/reopenlist'
+let s:bufferlist_reopendata = {}
 
 " ============================================================================
 " bufferlist detail
@@ -988,10 +988,10 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#ReopenBuild
     " --------------------------------------------------
     function! bufferlist#ReopenBuild(buf)
-        if !isdirectory(g:bufferlist_filepath)
-            call mkdir(g:bufferlist_filepath, 'p', 0777)
+        if !isdirectory(g:bufferlist_datapath)
+            call mkdir(g:bufferlist_datapath, 'p', 0777)
         endif
-        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover ==# 1
+        if filereadable(s:bufferlist_reopenlist) && s:bufferlist_restover ==# 1
             let l:savelist = []
             let l:bufname = fnamemodify(bufname(a:buf), ':p')
             let l:buflist = filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&buftype") ==# ""')
@@ -1008,8 +1008,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                         endif
                     endif
                 endfor
-                let s:bufferlist_filedata = l:savelist
-                call writefile(s:bufferlist_filedata, s:bufferlist_filelist)
+                let s:bufferlist_reopendata = l:savelist
+                call writefile(s:bufferlist_reopendata, s:bufferlist_reopenlist)
             endif
         endif
     endfunction
@@ -1018,13 +1018,13 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#ReopenClose
     " --------------------------------------------------
     function! bufferlist#ReopenClose(buf)
-        if !isdirectory(g:bufferlist_filepath)
-            call mkdir(g:bufferlist_filepath, 'p', 0777)
+        if !isdirectory(g:bufferlist_datapath)
+            call mkdir(g:bufferlist_datapath, 'p', 0777)
         endif
-        if filereadable(s:bufferlist_filelist) && s:bufferlist_restover ==# 1
+        if filereadable(s:bufferlist_reopenlist) && s:bufferlist_restover ==# 1
             let l:savelist = []
-            let s:bufferlist_filedata = readfile(s:bufferlist_filelist)
-            for il in s:bufferlist_filedata
+            let s:bufferlist_reopendata = readfile(s:bufferlist_reopenlist)
+            for il in s:bufferlist_reopendata
                 let il = substitute(il, '\\ ', "\u0001", 'g')
                 let l:rec = split(il, ' ', 1)
                 if len(l:rec) >= 2
@@ -1035,8 +1035,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                     endif
                 endif
             endfor
-            let s:bufferlist_filedata = l:savelist
-            call writefile(s:bufferlist_filedata, s:bufferlist_filelist)
+            let s:bufferlist_reopendata = l:savelist
+            call writefile(s:bufferlist_reopendata, s:bufferlist_reopenlist)
         endif
     endfunction
 
@@ -1044,11 +1044,11 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#ReopenRestore
     " --------------------------------------------------
     function! bufferlist#ReopenRestore()
-        if filereadable(s:bufferlist_filelist)
+        if filereadable(s:bufferlist_reopenlist)
             let l:savelist = []
             let l:currfile = ''
-            let s:bufferlist_filedata = readfile(s:bufferlist_filelist)
-            for il in s:bufferlist_filedata
+            let s:bufferlist_reopendata = readfile(s:bufferlist_reopenlist)
+            for il in s:bufferlist_reopendata
                 let il = substitute(il, '\\ ', "\u0001", 'g')
                 let l:rec = split(il, ' ', 1)
                 if len(l:rec) >= 2

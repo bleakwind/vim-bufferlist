@@ -43,7 +43,7 @@ let g:bufferlist_winheight = 1
 " Enable bufferlist restoration (default: 0)
 let g:bufferlist_reopen = 1
 " Path for storing bufferlist data (default: $HOME/.vim/bufferlist)
-let g:bufferlist_filepath = g:config_dir_data.'bufferlist'
+let g:bufferlist_datapath = g:config_dir_data.'bufferlist'
 ```
 
 Color Customization
