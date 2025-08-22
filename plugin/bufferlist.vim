@@ -99,7 +99,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
 
             " get message
             let l:orig_bufnbr = bufnr('%')
-            let l:orig_bufinf = s:bufferlist_bufinf
+            let l:orig_bufinf = copy(s:bufferlist_bufinf)
             let s:bufferlist_bufinf = []
 
             " get buflist
@@ -111,13 +111,13 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                     " set value
                     let l:bufnbr = il.bufnr
                     let l:bufnme = bufname(il.bufnr)
-                    if empty(l:otabnm)
-                        let s:bufferlist_untnum = s:bufferlist_untnum + 1
-                        let l:tabnme = 'Untitled-'.s:bufferlist_untnum.''
-                    elseif !filereadable(bufname(il.bufnr))
+                    if !empty(l:bufnme)
+                        let l:tabnme = fnamemodify(l:bufnme, ':t')
+                    elseif !empty(l:otabnm)
                         let l:tabnme = l:otabnm
                     else
-                        let l:tabnme = fnamemodify(l:bufnme, ':t')
+                        let s:bufferlist_untnum = s:bufferlist_untnum + 1
+                        let l:tabnme = 'Untitled-'.s:bufferlist_untnum.''
                     endif
                     let l:modify = getbufvar(il.bufnr, '&modified') ? g:bufferlist_modifmark : ''
                     let l:tabdat = ' '.l:tabnme.l:modify.' '
