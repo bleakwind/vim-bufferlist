@@ -452,13 +452,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
                 if !empty(l:buflst)
                     let l:curr_bufnbr = bufnr('%')
-                    let l:curr_bufidx = -1
-                    for il in range(len(l:buflst))
-                        if l:buflst[il].bufnr ==# l:curr_bufnbr
-                            let l:curr_bufidx = il
-                            break
-                        endif
-                    endfor
+                    let l:curr_bufidx = index(map(copy(l:buflst), {_, v -> v.bufnr}), l:curr_bufnbr)
                     if l:curr_bufidx != -1
                         let l:targ_bufidx = l:curr_bufidx + a:1
                         if l:targ_bufidx < 0
@@ -540,8 +534,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
             if len(l:buflst) ==# 2
                 for il in l:buflst
-                    if getbufvar(il.bufnr, '&modified') ==# 0 && trim(join(getbufline(il.bufnr, 1, '$'), '')) ==# '' && filereadable(expand('#'.il.bufnr.':p')) ==# 0
-                        execute 'silent! bwipeout' il.bufnr
+                    if getbufvar(il.bufnr, '&modified') ==# 0 && filereadable(expand('#'.il.bufnr.':p')) ==# 0 && join(getbufline(il.bufnr, 1, '$'), '') ==# ''
+                        execute 'silent! bwipeout ' il.bufnr
                         break
                     endif
                 endfor
@@ -557,48 +551,94 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#TabClose
     " --------------------------------------------------
     function! bufferlist#TabClose(...) abort
-
         " check win
         let l:orig_winidn = win_getid()
         let l:basic_winidn = get(filter(map(range(1, winnr('$')), 'win_getid(v:val)'), '!bufferlist#IsSpecial(winbufnr(win_id2win(v:val)))'), 0, -1)
         if l:basic_winidn != -1 && win_id2win(l:basic_winidn) != 0
+            " goto basic win
             call win_gotoid(l:basic_winidn)
 
-            " tab close
+            " curr state
             let l:curr_bufnbr = bufnr('%')
+            let l:curr_filename = expand('%:p')
+            let l:curr_modified = getbufvar(l:curr_bufnbr, '&modified')
+            let l:curr_exists = !empty(l:curr_filename) && filereadable(l:curr_filename)
+            let l:curr_content = join(getbufline(l:curr_bufnbr, 1, '$'), '')
+
+            " buf list
             let l:buflst = filter(getbufinfo({'buflisted': 1}), '!bufferlist#IsSpecial(v:val.bufnr) && v:val.loaded')
-            if len(l:buflst) > 1
-                " current index
-                let l:curr_bufidx = -1
-                for il in range(len(l:buflst))
-                    if l:buflst[il].bufnr ==# l:curr_bufnbr
-                        let l:curr_bufidx = il
-                        break
+            let l:curr_bufidx = index(map(copy(l:buflst), {_, v -> v.bufnr}), l:curr_bufnbr)
+            let l:next_bufnbr = -1
+            if l:curr_bufidx + 1 < len(l:buflst)
+                let l:next_bufnbr = l:buflst[l:curr_bufidx + 1].bufnr
+            elseif l:curr_bufidx - 1 >= 0
+                let l:next_bufnbr = l:buflst[l:curr_bufidx - 1].bufnr
+            endif
+
+            " check state
+            if len(l:buflst) == 1 && l:curr_modified ==# 0 && l:curr_exists ==# 0 && l:curr_content ==# ''
+                echohl BufferlistPmtWar | echo "You already closed all buffer..." | echohl None
+            elseif l:curr_exists
+                if l:curr_modified
+                    echohl BufferlistPmtWar | let l:choice = input('File modified. Save changes? (y/n): ') | echohl None
+                    if l:choice =~? '\v^(y|yes)$'
+                        try
+                            silent execute 'w'
+                            execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
+                            execute 'bwipeout! ' l:curr_bufnbr
+                            echohl BufferlistPmtSuc | echo "File saved and closed successfully..." | echohl None
+                        catch
+                            echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                            return
+                        endtry
+                    elseif l:choice =~? '\v^(n|no)$'
+                        execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
+                        execute 'bwipeout! ' l:curr_bufnbr
+                        echohl BufferlistPmtErr | echo "\nFile closed without saving changes..." | echohl None
+                    else
+                        echohl BufferlistPmtErr | echo "\nOperation cancelled..." | echohl None
+                        return
                     endif
-                endfor
-                " next index
-                let l:next_bufidx = -1
-                if l:curr_bufidx + 1 < len(l:buflst)
-                    let l:next_bufidx = l:buflst[l:curr_bufidx + 1].bufnr
-                elseif l:curr_bufidx - 1 >= 0
-                    let l:next_bufidx = l:buflst[l:curr_bufidx - 1].bufnr
-                endif
-                if l:next_bufidx != -1
-                    execute 'buffer' l:next_bufidx
                 else
-                    enew
+                    execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
+                    execute 'bwipeout! ' l:curr_bufnbr
+                    echohl BufferlistPmtSuc | echo "File closed..." | echohl None
                 endif
-                " delete current
-                execute 'bwipeout' l:curr_bufnbr
             else
-                " last tab
-                if getbufvar(l:curr_bufnbr, '&modified') ==# 1
-                    echohl ErrorMsg | echo "Warning: Please save this file first..." | echohl None
-                elseif !filereadable(expand('#'.l:curr_bufnbr.':p'))
-                    echohl WarningMsg | echo "Warning: You already closed all buffer..." | echohl None
+                echohl BufferlistPmtWar | let l:choice = input('File has been modified but does not exist, save it? (y/n): ') | echohl None
+                if l:choice =~? '\v^(y|yes)$'
+                    let l:pmt_def   = "\nPlease input path and filename for this file...\nFilename: "
+                    let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
+                    let l:ipt_con   = input(l:pmt_def, l:pth_def, 'file')
+                    let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
+                    let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
+                    if empty(l:ipt_pth) || empty(l:ipt_con)
+                        echohl BufferlistPmtErr | echo "\nNo filename entered, Operation cancelled..." | echohl None
+                        return
+                    elseif filereadable(l:ipt_pth) == 1
+                        echohl BufferlistPmtErr | echo "\nThe entered path is a file, please re-enter..." | echohl None
+                        return
+                    elseif (!isdirectory(l:ipt_pth) && mkdir(l:ipt_pth, 'p', 0755) == 0) || filewritable(l:ipt_pth) != 2
+                        echohl BufferlistPmtErr | echo "\nCan't save file in this path, please re-enter..." | echohl None
+                        return
+                    else
+                        try
+                            silent execute 'w '.fnameescape(l:ipt_con)
+                            execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
+                            execute 'bwipeout! ' l:curr_bufnbr
+                            echohl BufferlistPmtSuc | echo "File saved and closed successfully..." | echohl None
+                        catch
+                            echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                            return
+                        endtry
+                    endif
+                elseif l:choice =~? '\v^(n|no)$'
+                    execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
+                    execute 'bwipeout! ' l:curr_bufnbr
+                    echohl BufferlistPmtErr | echo "\nFile closed without saving changes..." | echohl None
                 else
-                    enew
-                    execute 'bwipeout' l:curr_bufnbr
+                    echohl BufferlistPmtErr | echo "\nOperation cancelled..." | echohl None
+                    return
                 endif
             endif
         endif
@@ -610,6 +650,73 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
 
         " tab update
         call bufferlist#TabUpdtab()
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#TabSave
+    " --------------------------------------------------
+    function! bufferlist#TabSave(...) abort
+        " check win
+        let l:orig_winidn = win_getid()
+        let l:basic_winidn = get(filter(map(range(1, winnr('$')), 'win_getid(v:val)'), '!bufferlist#IsSpecial(winbufnr(win_id2win(v:val)))'), 0, -1)
+        if l:basic_winidn != -1 && win_id2win(l:basic_winidn) != 0
+            " goto basic win
+            call win_gotoid(l:basic_winidn)
+
+            " curr state
+            let l:res_prompt = ""
+            let l:curr_bufnbr = bufnr('%')
+            let l:curr_filename = expand('%:p')
+            let l:curr_modified = getbufvar(l:curr_bufnbr, '&modified')
+            let l:curr_exists = !empty(l:curr_filename) && filereadable(l:curr_filename)
+
+            " check state
+            if l:curr_exists
+                if l:curr_modified
+                    try
+                        silent execute 'w'
+                        let l:res_prompt = "File saved successfully..."
+                    catch
+                        echohl BufferlistPmtErr | echo "File save failed: ".v:exception | echohl None
+                        return
+                    endtry
+                endif
+            else
+                let l:pmt_def   = "Please input path and filename for this file...\nFilename: "
+                let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
+                let l:ipt_con   = input(l:pmt_def, l:pth_def, 'file')
+                let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
+                let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
+                if empty(l:ipt_pth) || empty(l:ipt_con)
+                    echohl BufferlistPmtErr | echo "\nNo filename entered, Operation cancelled..." | echohl None
+                    return
+                elseif filereadable(l:ipt_pth) == 1
+                    echohl BufferlistPmtErr | echo "\nThe entered path is a file, please re-enter..." | echohl None
+                    return
+                elseif (!isdirectory(l:ipt_pth) && mkdir(l:ipt_pth, 'p', 0755) == 0) || filewritable(l:ipt_pth) != 2
+                    echohl BufferlistPmtErr | echo "\nCan't save file in this path, please re-enter..." | echohl None
+                    return
+                else
+                    try
+                        silent execute 'w '.fnameescape(l:ipt_con)
+                        let l:res_prompt = "File saved successfully..."
+                    catch
+                        echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                        return
+                    endtry
+                endif
+            endif
+        endif
+
+        " back win
+        if l:orig_winidn != 0 && win_id2win(l:orig_winidn) != 0
+            call win_gotoid(l:orig_winidn)
+        endif
+
+        " tab update
+        call bufferlist#TabUpdtab()
+
+        return l:res_prompt
     endfunction
 
     " --------------------------------------------------
@@ -974,11 +1081,11 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
         execute 'hi! BufferlistHlSepmod ctermfg='.bufferlist#ColorName(l:gbg).'      ctermbg='.bufferlist#ColorName(l:gbg).' cterm=NONE guifg='.bufferlist#ColorMask(l:gbg, 0.3).' guibg='.bufferlist#ColorMask(l:gbg, 0.3).' gui=NONE'
 
         " prompt message
-        hi! BufferlistPmtDefault ctermfg=Gray   ctermbg=NONE cterm=Bold guifg=#B1B3B8 guibg=NONE gui=Bold
-        hi! BufferlistPmtNormal  ctermfg=Blue   ctermbg=NONE cterm=Bold guifg=#79BBFF guibg=NONE gui=Bold
-        hi! BufferlistPmtSuccess ctermfg=Green  ctermbg=NONE cterm=Bold guifg=#95D475 guibg=NONE gui=Bold
-        hi! BufferlistPmtWarning ctermfg=Yellow ctermbg=NONE cterm=Bold guifg=#EEBE77 guibg=NONE gui=Bold
-        hi! BufferlistPmtError   ctermfg=Red    ctermbg=NONE cterm=Bold guifg=#F56C6C guibg=NONE gui=Bold
+        hi! BufferlistPmtDef ctermfg=Gray   ctermbg=NONE cterm=Bold guifg=#B1B3B8 guibg=NONE gui=Bold
+        hi! BufferlistPmtNor ctermfg=Blue   ctermbg=NONE cterm=Bold guifg=#79BBFF guibg=NONE gui=Bold
+        hi! BufferlistPmtSuc ctermfg=Green  ctermbg=NONE cterm=Bold guifg=#95D475 guibg=NONE gui=Bold
+        hi! BufferlistPmtWar ctermfg=Yellow ctermbg=NONE cterm=Bold guifg=#EEBE77 guibg=NONE gui=Bold
+        hi! BufferlistPmtErr ctermfg=Red    ctermbg=NONE cterm=Bold guifg=#F56C6C guibg=NONE gui=Bold
 
         " update bufferlist
         call bufferlist#TabUpdbuf()
@@ -1128,6 +1235,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     command!                         BufferlistToggle   call bufferlist#Toggle()
     command! -nargs=? -complete=file BufferlistTabnew   call bufferlist#TabNew(<f-args>)
     command!                         BufferlistTabClose call bufferlist#TabClose()
+    command!                         BufferlistTabSave  call bufferlist#TabSave()
 
 endif
 

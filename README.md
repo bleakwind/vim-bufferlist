@@ -68,11 +68,12 @@ let g:bufferlist_hlsepnor = '#AAAAAA'
 ## Usage
 | Command               | Description              |
 | --------------------- | ------------------------ |
-| `:BufferlistToggle`   | Toggle the bufferlist    |
 | `:BufferlistOpen`     | Open the bufferlist      |
 | `:BufferlistClose`    | Close the bufferlist     |
+| `:BufferlistToggle`   | Toggle the bufferlist    |
 | `:BufferlistTabnew`   | Create a new buffer      |
 | `:BufferlistTabClose` | Close the current buffer |
+| `:BufferlistTabSave`  | Save current buffer      |
 
 ## Key Mappings
 
