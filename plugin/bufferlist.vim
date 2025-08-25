@@ -586,58 +586,71 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                             silent execute 'w'
                             execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                             execute 'bwipeout! ' l:curr_bufnbr
+                            redraw
                             echohl BufferlistPmtSuc | echo "File saved and closed successfully..." | echohl None
                         catch
-                            echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                            redraw
+                            echohl BufferlistPmtErr | echo "File save failed: ".v:exception | echohl None
                             return
                         endtry
                     elseif l:choice =~? '\v^(n|no)$'
                         execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                         execute 'bwipeout! ' l:curr_bufnbr
-                        echohl BufferlistPmtErr | echo "\nFile closed without saving changes..." | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "File closed without saving changes..." | echohl None
                     else
-                        echohl BufferlistPmtErr | echo "\nOperation cancelled..." | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "Input error, operation aborted..." | echohl None
                         return
                     endif
                 else
                     execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                     execute 'bwipeout! ' l:curr_bufnbr
-                    echohl BufferlistPmtSuc | echo "File closed..." | echohl None
+                    redraw
+                    echohl BufferlistPmtSuc | echo "The file has been closed..." | echohl None
                 endif
             else
                 echohl BufferlistPmtWar | let l:choice = input('File has been modified but does not exist, save it? (y/n): ') | echohl None
                 if l:choice =~? '\v^(y|yes)$'
-                    let l:pmt_def   = "\nPlease input path and filename for this file...\nFilename: "
                     let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
-                    let l:ipt_con   = input(l:pmt_def, l:pth_def, 'file')
+                    redraw
+                    echohl BufferlistPmtWar | echo "Please input path and filename for this file..." | echohl None
+                    echohl BufferlistPmtWar | let l:ipt_con = input("Filename: ", l:pth_def, 'file') | echohl None
                     let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
                     let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
                     if empty(l:ipt_pth) || empty(l:ipt_con)
-                        echohl BufferlistPmtErr | echo "\nNo filename entered, Operation cancelled..." | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "No filename entered, operation aborted..." | echohl None
                         return
                     elseif filereadable(l:ipt_pth) == 1
-                        echohl BufferlistPmtErr | echo "\nThe entered path is a file, please re-enter..." | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "The entered path is a file, operation aborted..." | echohl None
                         return
                     elseif (!isdirectory(l:ipt_pth) && mkdir(l:ipt_pth, 'p', 0755) == 0) || filewritable(l:ipt_pth) != 2
-                        echohl BufferlistPmtErr | echo "\nCan't save file in this path, please re-enter..." | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "Can't save file in this path, operation aborted..." | echohl None
                         return
                     else
                         try
                             silent execute 'w '.fnameescape(l:ipt_con)
                             execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                             execute 'bwipeout! ' l:curr_bufnbr
+                            redraw
                             echohl BufferlistPmtSuc | echo "File saved and closed successfully..." | echohl None
                         catch
-                            echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                            redraw
+                            echohl BufferlistPmtErr | echo "File save failed: ".v:exception | echohl None
                             return
                         endtry
                     endif
                 elseif l:choice =~? '\v^(n|no)$'
                     execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                     execute 'bwipeout! ' l:curr_bufnbr
-                    echohl BufferlistPmtErr | echo "\nFile closed without saving changes..." | echohl None
+                    redraw
+                    echohl BufferlistPmtErr | echo "File closed without saving changes..." | echohl None
                 else
-                    echohl BufferlistPmtErr | echo "\nOperation cancelled..." | echohl None
+                    redraw
+                    echohl BufferlistPmtErr | echo "Input error, operation aborted..." | echohl None
                     return
                 endif
             endif
@@ -677,31 +690,36 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                         silent execute 'w'
                         let l:res_prompt = "File saved successfully..."
                     catch
+                        redraw
                         echohl BufferlistPmtErr | echo "File save failed: ".v:exception | echohl None
                         return
                     endtry
                 endif
             else
-                let l:pmt_def   = "Please input path and filename for this file...\nFilename: "
                 let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
-                let l:ipt_con   = input(l:pmt_def, l:pth_def, 'file')
+                echohl BufferlistPmtWar | echo "Please input path and filename for this file..." | echohl None
+                echohl BufferlistPmtWar | let l:ipt_con = input("Filename: ", l:pth_def, 'file') | echohl None
                 let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
                 let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
                 if empty(l:ipt_pth) || empty(l:ipt_con)
-                    echohl BufferlistPmtErr | echo "\nNo filename entered, Operation cancelled..." | echohl None
+                    redraw
+                    echohl BufferlistPmtErr | echo "No filename entered, operation aborted..." | echohl None
                     return
                 elseif filereadable(l:ipt_pth) == 1
-                    echohl BufferlistPmtErr | echo "\nThe entered path is a file, please re-enter..." | echohl None
+                    redraw
+                    echohl BufferlistPmtErr | echo "The entered path is a file, operation aborted..." | echohl None
                     return
                 elseif (!isdirectory(l:ipt_pth) && mkdir(l:ipt_pth, 'p', 0755) == 0) || filewritable(l:ipt_pth) != 2
-                    echohl BufferlistPmtErr | echo "\nCan't save file in this path, please re-enter..." | echohl None
+                    redraw
+                    echohl BufferlistPmtErr | echo "Can't save file in this path, operation aborted..." | echohl None
                     return
                 else
                     try
                         silent execute 'w '.fnameescape(l:ipt_con)
                         let l:res_prompt = "File saved successfully..."
                     catch
-                        echohl BufferlistPmtErr | echo "\nFile save failed: ".v:exception | echohl None
+                        redraw
+                        echohl BufferlistPmtErr | echo "File save failed: ".v:exception | echohl None
                         return
                     endtry
                 endif
