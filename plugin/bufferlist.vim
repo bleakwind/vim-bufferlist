@@ -597,7 +597,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                         execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                         execute 'bwipeout! ' l:curr_bufnbr
                         redraw
-                        echohl BufferlistPmtErr | echo "File closed without saving changes..." | echohl None
+                        echohl BufferlistPmtWar | echo "File closed without saving changes..." | echohl None
                     else
                         redraw
                         echohl BufferlistPmtErr | echo "Input error, operation aborted..." | echohl None
@@ -647,7 +647,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                     execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                     execute 'bwipeout! ' l:curr_bufnbr
                     redraw
-                    echohl BufferlistPmtErr | echo "File closed without saving changes..." | echohl None
+                    echohl BufferlistPmtWar | echo "File closed without saving changes..." | echohl None
                 else
                     redraw
                     echohl BufferlistPmtErr | echo "Input error, operation aborted..." | echohl None
