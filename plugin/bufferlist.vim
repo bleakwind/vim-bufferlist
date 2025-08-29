@@ -281,7 +281,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 call timer_stop(s:bufferlist_timertab)
                 let s:bufferlist_timertab = -1
             endif
-            let s:bufferlist_timertab = timer_start(100, {-> execute('call bufferlist#TabUpdtab()', '')})
+            let s:bufferlist_timertab = timer_start(100, {-> bufferlist#TabUpdtab()})
         endif
     endfunction
 
@@ -304,7 +304,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 call timer_stop(s:bufferlist_timerbuf)
                 let s:bufferlist_timerbuf = -1
             endif
-            let s:bufferlist_timerbuf = timer_start(100, {-> execute('call bufferlist#TabUpdbuf()', '')})
+            let s:bufferlist_timerbuf = timer_start(100, {-> bufferlist#TabUpdbuf()})
         endif
     endfunction
 
@@ -1232,10 +1232,10 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
         autocmd VimEnter * call bufferlist#SetHlcolor()
         autocmd VimEnter * nested call bufferlist#BuildCmd()
         if g:bufferlist_autostart ==# 1
-            autocmd VimEnter * call timer_start(0, {-> execute('BufferlistOpen', '')})
+            autocmd VimEnter * call timer_start(0, {-> bufferlist#Open()})
         endif
         if exists('g:bufferlist_reopen') && g:bufferlist_reopen ==# 1
-            autocmd VimEnter * call timer_start(0, {-> execute('call bufferlist#ReopenRestore()', '')})
+            autocmd VimEnter * call timer_start(0, {-> bufferlist#ReopenRestore()})
         endif
     augroup END
 
