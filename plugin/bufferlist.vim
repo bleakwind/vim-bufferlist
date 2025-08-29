@@ -583,7 +583,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                     echohl BufferlistPmtWar | let l:choice = input("File has been modified. save changes? (y/n): ") | echohl None
                     if l:choice =~? '\v^(y|yes)$'
                         try
-                            silent execute 'w'
+                            silent execute 'write'
                             execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                             execute 'bwipeout! ' l:curr_bufnbr
                             redraw
@@ -633,7 +633,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                             return
                         else
                             try
-                                silent execute 'w '.fnameescape(l:ipt_con)
+                                silent execute 'write '.fnameescape(l:ipt_con)
                                 execute l:next_bufnbr != -1 ? 'buffer '.l:next_bufnbr : 'enew'
                                 execute 'bwipeout! ' l:curr_bufnbr
                                 redraw
@@ -694,7 +694,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             if l:curr_exists
                 if l:curr_modified
                     try
-                        silent execute 'w'
+                        silent execute 'write'
                         let l:res_prompt = "File saved successfully..."
                     catch
                         redraw
@@ -722,7 +722,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                     return
                 else
                     try
-                        silent execute 'w '.fnameescape(l:ipt_con)
+                        silent execute 'write '.fnameescape(l:ipt_con)
                         let l:res_prompt = "File saved successfully..."
                     catch
                         redraw
