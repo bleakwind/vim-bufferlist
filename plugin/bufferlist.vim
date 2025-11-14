@@ -33,6 +33,7 @@ let g:bufferlist_winwidth   = get(g:, 'bufferlist_winwidth',    20)
 let g:bufferlist_winheight  = get(g:, 'bufferlist_winheight',   1)
 let g:bufferlist_horzsepar  = get(g:, 'bufferlist_horzsepar',   '|')
 let g:bufferlist_modifmark  = get(g:, 'bufferlist_modifmark',   '[+]')
+let g:bufferlist_updelay    = get(g:, 'bufferlist_updelay',     1000)
 
 " tab color
 let g:bufferlist_hldefnor   = get(g:, 'bufferlist_hldefnor',    '#FFFFFF')
@@ -59,6 +60,7 @@ let s:bufferlist_hltcur     = []
 let s:bufferlist_hltvis     = []
 let s:bufferlist_timertab   = -1
 let s:bufferlist_timerbuf   = -1
+let s:bufferlist_timerxdo   = -1
 let s:bufferlist_restover   = 0
 let s:bufferlist_reopenlist = g:bufferlist_datapath.'/reopenlist'
 let s:bufferlist_reopendata = {}
@@ -322,6 +324,17 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
             endfor
             call bufferlist#TabRender()
         endif
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#UndoRedo
+    " --------------------------------------------------
+    function! bufferlist#UndoRedo(...) abort
+        if s:bufferlist_timerxdo != -1
+            call timer_stop(s:bufferlist_timerxdo)
+            let s:bufferlist_timerxdo = -1
+        endif
+        let s:bufferlist_timerxdo = timer_start(g:bufferlist_updelay, {-> bufferlist#TabUpdtab()})
     endfunction
 
     " --------------------------------------------------
@@ -1251,6 +1264,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
         nnoremap <silent> <C-Right> :call bufferlist#BufSwitch(1)<CR>
         nnoremap <silent> <C-Left>  :call bufferlist#BufSwitch(-1)<CR>
     endif
+    autocmd VimEnter * nnoremap <silent> u u:call bufferlist#UndoRedo()<CR>
+    autocmd VimEnter * nnoremap <silent> <C-r> <C-r>:call bufferlist#UndoRedo()<CR>
 
     " --------------------------------------------------
     " command
@@ -1269,3 +1284,4 @@ endif
 " ============================================================================
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
+
