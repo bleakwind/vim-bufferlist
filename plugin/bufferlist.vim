@@ -327,14 +327,30 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     endfunction
 
     " --------------------------------------------------
-    " bufferlist#UndoRedo
+    " bufferlist#HistoryRun
     " --------------------------------------------------
-    function! bufferlist#UndoRedo(...) abort
+    function! bufferlist#HistoryRun(...) abort
+        " stop existing timer
         if s:bufferlist_timerxdo != -1
             call timer_stop(s:bufferlist_timerxdo)
             let s:bufferlist_timerxdo = -1
         endif
-        let s:bufferlist_timerxdo = timer_start(g:bufferlist_updelay, {-> bufferlist#TabUpdtab()})
+        " create delayed update function
+        let s:bufferlist_timerxdo = timer_start(g:bufferlist_updelay, {-> bufferlist#HistoryCheck()})
+    endfunction
+
+    " --------------------------------------------------
+    " bufferlist#HistoryCheck
+    " --------------------------------------------------
+    function! bufferlist#HistoryCheck(...) abort
+        " if in visual mode
+        let l:mode = mode()
+        if l:mode =~# '\v(v|V|s|S)\c'
+            let s:bufferlist_timerxdo = timer_start(g:bufferlist_updelay, {-> bufferlist#HistoryCheck()})
+            return
+        endif
+        " not in visual mode
+        call bufferlist#TabUpdtab()
     endfunction
 
     " --------------------------------------------------
@@ -1264,8 +1280,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
         nnoremap <silent> <C-Right> :call bufferlist#BufSwitch(1)<CR>
         nnoremap <silent> <C-Left>  :call bufferlist#BufSwitch(-1)<CR>
     endif
-    autocmd VimEnter * nnoremap <silent> u u:call bufferlist#UndoRedo()<CR>
-    autocmd VimEnter * nnoremap <silent> <C-r> <C-r>:call bufferlist#UndoRedo()<CR>
+    autocmd VimEnter * nnoremap <silent> u u:call bufferlist#HistoryRun()<CR>
+    autocmd VimEnter * nnoremap <silent> <C-r> <C-r>:call bufferlist#HistoryRun()<CR>
 
     " --------------------------------------------------
     " command
