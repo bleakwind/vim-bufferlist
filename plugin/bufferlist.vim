@@ -609,6 +609,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 echohl BufferlistPmtWar | echo "You already closed all buffer..." | echohl None
             elseif l:curr_exists
                 if l:curr_modified
+                    redraw
                     echohl BufferlistPmtWar | let l:choice = input("File has been modified. save changes? (y/n): ") | echohl None
                     if l:choice =~? '\v^(y|yes)$'
                         try
@@ -640,12 +641,12 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 endif
             else
                 if l:curr_modified
+                    redraw
                     echohl BufferlistPmtWar | let l:choice = input("File has been modified and doesn't exist, save it? (y/n): ") | echohl None
                     if l:choice =~? '\v^(y|yes)$'
                         let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
                         redraw
-                        echohl BufferlistPmtWar | echo "Please input path and filename for this file..." | echohl None
-                        echohl BufferlistPmtWar | let l:ipt_con = input("Filename: ", l:pth_def, 'file') | echohl None
+                        echohl BufferlistPmtWar | let l:ipt_con = input("Please input path and filename for this file: ", l:pth_def, 'file') | echohl None
                         let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
                         let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
                         if empty(l:ipt_pth) || empty(l:ipt_con)
@@ -733,8 +734,8 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
                 endif
             else
                 let l:pth_def   = substitute(expand("%:p:h").'/', '\v[\/\\]+\c', '/', 'g')
-                echohl BufferlistPmtWar | echo "Please input path and filename for this file..." | echohl None
-                echohl BufferlistPmtWar | let l:ipt_con = input("Filename: ", l:pth_def, 'file') | echohl None
+                redraw
+                echohl BufferlistPmtWar | let l:ipt_con = input("Please input path and filename for this file: ", l:pth_def, 'file') | echohl None
                 let l:ipt_con   = substitute(l:ipt_con, '\v[\/\\]+\c', '/', 'g')
                 let l:ipt_pth   = fnamemodify(l:ipt_con, ':h')
                 if empty(l:ipt_pth) || empty(l:ipt_con)
