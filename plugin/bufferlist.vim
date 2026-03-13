@@ -1,7 +1,7 @@
 "  vim: set expandtab tabstop=4 softtabstop=4 shiftwidth=4: */
 "
 "  +-------------------------------------------------------------------------+
-"  | $Id: bufferlist.vim 2026-03-14 03:56:08 Bleakwind Exp $                 |
+"  | $Id: bufferlist.vim 2026-03-14 06:13:17 Bleakwind Exp $                 |
 "  +-------------------------------------------------------------------------+
 "  | Copyright (c) 2008-2026 Bleakwind(Rick Wu).                             |
 "  +-------------------------------------------------------------------------+
@@ -911,23 +911,24 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     " bufferlist#ColorMask
     " --------------------------------------------------
     function! bufferlist#ColorMask(color, alpha) abort
-        let l:res_color = a:color
-        if a:color =~? '^#[0-9a-fA-F]\{6}$' && a:alpha >= 0.0 && a:alpha <= 1.0
-            let l:r = str2nr(a:color[1:2], 16)
-            let l:g = str2nr(a:color[3:4], 16)
-            let l:b = str2nr(a:color[5:6], 16)
+        let l:get_color = a:color
+        let l:get_alpha = str2float(a:alpha)
+        if l:get_color =~? '^#[0-9a-fA-F]\{6}$' && l:get_alpha >= 0.0 && l:get_alpha <= 1.0
+            let l:r = str2nr(l:get_color[1:2], 16)
+            let l:g = str2nr(l:get_color[3:4], 16)
+            let l:b = str2nr(l:get_color[5:6], 16)
 
-            let l:mixed_r = float2nr(l:r * (1.0 - a:alpha) + 255 * a:alpha)
-            let l:mixed_g = float2nr(l:g * (1.0 - a:alpha) + 255 * a:alpha)
-            let l:mixed_b = float2nr(l:b * (1.0 - a:alpha) + 255 * a:alpha)
+            let l:mixed_r = float2nr(l:r * (1.0 - l:get_alpha) + 255 * l:get_alpha)
+            let l:mixed_g = float2nr(l:g * (1.0 - l:get_alpha) + 255 * l:get_alpha)
+            let l:mixed_b = float2nr(l:b * (1.0 - l:get_alpha) + 255 * l:get_alpha)
 
             let l:mixed_r = max([0, min([255, l:mixed_r])])
             let l:mixed_g = max([0, min([255, l:mixed_g])])
             let l:mixed_b = max([0, min([255, l:mixed_b])])
 
-            let l:res_color = printf('#%02X%02X%02X', l:mixed_r, l:mixed_g, l:mixed_b)
+            let l:get_color = printf('#%02X%02X%02X', l:mixed_r, l:mixed_g, l:mixed_b)
         endif
-        return l:res_color
+        return l:get_color
     endfunction
 
     " --------------------------------------------------
