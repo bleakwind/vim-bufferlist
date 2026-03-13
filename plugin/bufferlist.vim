@@ -1,7 +1,7 @@
 "  vim: set expandtab tabstop=4 softtabstop=4 shiftwidth=4: */
 "
 "  +-------------------------------------------------------------------------+
-"  | $Id: bufferlist.vim 2026-03-13 18:03:24 Bleakwind Exp $                 |
+"  | $Id: bufferlist.vim 2026-03-14 03:56:08 Bleakwind Exp $                 |
 "  +-------------------------------------------------------------------------+
 "  | Copyright (c) 2008-2026 Bleakwind(Rick Wu).                             |
 "  +-------------------------------------------------------------------------+
@@ -345,7 +345,7 @@ if exists('g:bufferlist_enabled') && g:bufferlist_enabled ==# 1
     function! bufferlist#HistoryCheck(...) abort
         " if in visual mode
         let l:mode = mode()
-        if l:mode =~# '\v(v|V|s|S)\c'
+        if l:mode =~# '\v(v|V|s|S|'."\<C-v>".')\C'
             let s:bufferlist_timerxdo = timer_start(g:bufferlist_updelay, {-> bufferlist#HistoryCheck()})
             return
         endif
