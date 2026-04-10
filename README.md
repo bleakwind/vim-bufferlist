@@ -48,7 +48,7 @@ let g:bufferlist_datapath = g:config_dir_data.'bufferlist'
 
 Color Customization
 ```vim
-" Tab color format - [dark cterm, dark gui, light cterm, light gui]
+" Tab color format
 " Normal buffers
 let g:bufferlist_hldefnor = '#FFFFFF'
 " Modified buffers
@@ -97,3 +97,4 @@ let g:bufferlist_hlsepnor = '#AAAAAA'
 
 ## License
 BSD 2-Clause - See LICENSE file
+
